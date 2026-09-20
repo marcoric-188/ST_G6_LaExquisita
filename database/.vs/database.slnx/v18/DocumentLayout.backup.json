@@ -1,0 +1,52 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Github\\ST_G6_LaExquisita\\database\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Github\\ST_G6_LaExquisita\\database\\seed.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:seed.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Github\\ST_G6_LaExquisita\\database\\schema.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:schema.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "seed.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (56))",
+              "DocumentMoniker": "C:\\Github\\ST_G6_LaExquisita\\database\\seed.sql",
+              "RelativeDocumentMoniker": "seed.sql",
+              "ToolTip": "C:\\Github\\ST_G6_LaExquisita\\database\\seed.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (56))",
+              "RelativeToolTip": "seed.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (56))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-09-20T00:10:59.415Z",
+              "EditorCaption": " - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (56))"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "schema.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (164))",
+              "DocumentMoniker": "C:\\Github\\ST_G6_LaExquisita\\database\\schema.sql",
+              "RelativeDocumentMoniker": "schema.sql",
+              "ToolTip": "C:\\Github\\ST_G6_LaExquisita\\database\\schema.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (164))",
+              "RelativeToolTip": "schema.sql - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (164))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-09-20T00:07:46.785Z",
+              "EditorCaption": " - localhost\\SQL2025.la_exquisita_db (MAR\\rico4 (164))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
