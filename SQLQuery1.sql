@@ -59,13 +59,13 @@ GO
 USE la_exquisita_db;
 GO
 
--- 1. Permitir que metodo_pago acepte nulos o ponerle 'Efectivo' por defecto
+-- Permitir que metodo_pago acepte nulos o ponerle 'Efectivo' por defecto
 ALTER TABLE dbo.ventas ALTER COLUMN metodo_pago VARCHAR(50) NULL;
 GO
 ALTER TABLE dbo.ventas ADD CONSTRAINT DF_ventas_metodo_pago DEFAULT 'Efectivo' FOR metodo_pago;
 GO
 
--- 2. Asegurar que la fecha_hora también se ponga sola si el backend no la envía
+-- Asegurar que la fecha_hora también se ponga sola si el backend no la envía
 IF NOT EXISTS (
     SELECT * FROM sys.default_constraints 
     WHERE parent_object_id = OBJECT_ID('dbo.ventas') 
