@@ -1,5 +1,4 @@
 Parte 1: Cabecera y Descripción
-Markdown
 # La Exquisita - Sistema Transaccional & ERP (Fase II)
 
 Repositorio oficial del proyecto **La Exquisita**, un sistema transaccional modular (ERP / POS) orientado a la gestión de ventas de mostrador, control de inventario de materia prima, seguimiento de producción de alimentos preparados y conexión con base de datos relacional.
@@ -11,7 +10,6 @@ Repositorio oficial del proyecto **La Exquisita**, un sistema transaccional modu
 
 ---
 Parte 2: Propósito y Módulos
-Markdown
 ## Propósito General
 El objetivo de este sistema es controlar el flujo de caja, evitar la venta de productos agotados y prevenir descuadres de inventario en negocios de alimentos de rápida rotación.
 
@@ -31,7 +29,6 @@ La arquitectura actual contempla:
 
 ---
 Parte 3: Estructura del Repositorio
-Markdown
 ## Estructura del Repositorio
 
 ST_G6_LaExquisita/
@@ -53,7 +50,6 @@ ST_G6_LaExquisita/
 
 ---
 Parte 4: Base de Datos y Backend
-Markdown
 ## Configuración de la Base de Datos (SQL Server)
 El modelo relacional está diseñado para garantizar la integridad referencial y el control estricto de insumos.
 
@@ -81,10 +77,13 @@ El servidor está desarrollado en **Node.js** con **Express** y se conecta a SQL
 1. Ubícate en la carpeta del servidor desde tu terminal:
    ```bash
    cd backend
+
+
 Instala las dependencias necesarias:
 
 Bash
 npm install
+
 Configura tus variables de entorno creando un archivo .env basado en la plantilla .env.example:
 
 Fragmento de código
@@ -92,6 +91,7 @@ PORT=3000
 DB_HOST=localhost
 DB_INSTANCE=SQL2025
 DB_NAME=la_exquisita_db
+
 Inicia el servidor en modo de desarrollo:
 
 Bash
