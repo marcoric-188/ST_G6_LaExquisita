@@ -10,25 +10,34 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased selection:bg-amber-500 selection:text-white">
 
     <!-- Header / Barra de Navegación Superior -->
-    <header class="bg-slate-900 text-white px-8 py-4 flex justify-between items-center shadow-lg sticky top-0 z-50">
+    <header class="bg-slate-900 text-white px-8 py-4 flex justify-between items-center shadow-lg sticky top-0 z-50 border-b border-amber-500/30">
         <div class="flex items-center space-x-3 cursor-pointer" onclick="mostrarSeccion('panel')">
-            <div class="bg-amber-500 p-2 rounded-lg text-slate-900 font-black text-lg shadow">
+            <div class="bg-amber-500 p-2 rounded-xl text-slate-900 font-black text-lg shadow flex items-center justify-center">
                 <i class="fa-solid fa-fire-burner"></i>
             </div>
             <div>
                 <h1 class="text-base font-bold tracking-wide">La Exquisita</h1>
-                <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Sistema POS & ERP</p>
+                <p class="text-[10px] text-amber-400 uppercase tracking-widest font-semibold">Sistema POS & ERP</p>
             </div>
         </div>
-        <nav class="flex items-center space-x-6 text-sm">
+        <nav class="flex items-center space-x-5 text-sm">
             <button onclick="mostrarSeccion('panel')" class="text-slate-300 hover:text-amber-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-house"></i><span>Inicio</span></button>
-            <button onclick="cargarHistorialVentas()" class="text-slate-300 hover:text-amber-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-chart-line"></i><span>Consulta de Ventas</span></button>
+            <button onclick="cargarClientes()" class="text-slate-300 hover:text-amber-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-users"></i><span>Clientes</span></button>
+            <button onclick="cargarInventario()" class="text-slate-300 hover:text-amber-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-boxes-stacked"></i><span>Insumos</span></button>
+            <button onclick="cargarMermas()" class="text-slate-300 hover:text-rose-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-triangle-exclamation"></i><span>Mermas</span></button>
+            <button onclick="cargarHistorialVentas()" class="text-slate-300 hover:text-amber-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-chart-line"></i><span>Ventas</span></button>
+            <button onclick="mostrarSeccion('chatbot')" class="text-slate-300 hover:text-purple-400 font-medium transition flex items-center space-x-1.5"><i class="fa-solid fa-robot"></i><span>Asistente IA</span></button>
+            
+            <!-- Logo corporativo superior derecho basado en la foto del producto -->
+            <div class="flex items-center space-x-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full text-amber-400 text-xs font-bold">
+                <i class="fa-solid fa-utensils"></i>
+                <span>Artesanal & Tradición</span>
+            </div>
         </nav>
     </header>
 
@@ -37,94 +46,101 @@
 
         <!-- 1. Panel de Inicio / Dashboard -->
         <section id="sec-panel" class="space-y-8 animate-fadeIn">
-            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-8 shadow-xl relative overflow-hidden">
-                <div class="absolute right-0 top-0 transform translate-x-8 -translate-y-8 text-slate-800 opacity-20 text-9xl pointer-events-none">
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-amber-950 text-white rounded-2xl p-8 shadow-xl relative overflow-hidden border border-amber-500/20">
+                <div class="absolute right-0 top-0 transform translate-x-8 -translate-y-8 text-amber-500 opacity-10 text-9xl pointer-events-none">
                     <i class="fa-solid fa-utensils"></i>
                 </div>
                 <div class="relative z-10 max-w-2xl space-y-3">
                     <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Módulo Operativo Activo</span>
                     <h2 class="text-3xl font-extrabold tracking-tight">Panel General de Gestión</h2>
-                    <p class="text-slate-300 text-sm leading-relaxed">Plataforma transaccional para el control de mostrador, inventario de materia prima y trazabilidad de producción en tiempo real.</p>
+                    <p class="text-slate-300 text-sm leading-relaxed">Sistema transaccional conectado a SQL Server para control de mostrador, inventario de insumos, rangos de clientes, auditoría de mermas e Inteligencia Artificial.</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Venta Rápida POS -->
-                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between group">
+                <div class="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition flex flex-col justify-between group">
                     <div>
-                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
-                            <i class="fa-solid fa-cash-register"></i>
-                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-cash-register"></i></div>
                         <h3 class="font-bold text-slate-900 text-lg mb-1">Venta Rápida POS</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed mb-6">Facturación directa en mostrador para paquetes institucionales de arepas.</p>
+                        <p class="text-xs text-slate-500 mb-6">Facturación con selección de clientes y descuento automático de stock.</p>
                     </div>
-                    <button onclick="mostrarSeccion('pos')" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center space-x-2">
-                        <span>Abrir Caja</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
+                    <button onclick="mostrarSeccion('pos'); cargarClientesSelect();" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition">Abrir Caja</button>
                 </div>
 
-                <!-- Insumos y Stock -->
-                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between group">
+                <div class="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition flex flex-col justify-between group">
                     <div>
-                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
-                            <i class="fa-solid fa-boxes-stacked"></i>
-                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-users"></i></div>
+                        <h3 class="font-bold text-slate-900 text-lg mb-1">Módulo Clientes</h3>
+                        <p class="text-xs text-slate-500 mb-6">Directorio con rangos dinámicos y resumen de pedidos.</p>
+                    </div>
+                    <button onclick="cargarClientes()" class="w-full bg-amber-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-amber-700 transition">Ver Clientes</button>
+                </div>
+
+                <div class="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition flex flex-col justify-between group">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-boxes-stacked"></i></div>
                         <h3 class="font-bold text-slate-900 text-lg mb-1">Insumos y Stock</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed mb-6">Monitoreo de existencias de materia prima y alertas de stock mínimo.</p>
+                        <p class="text-xs text-slate-500 mb-6">Control de existencias de materia prima en SQL Server.</p>
                     </div>
-                    <button onclick="cargarInventario()" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition flex items-center justify-center space-x-2">
-                        <span>Ver Stock</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
+                    <button onclick="cargarInventario()" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-emerald-700 transition">Ver Stock</button>
                 </div>
 
-                <!-- Órdenes de Producción -->
-                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between group">
+                <div class="bg-white rounded-xl p-6 shadow-sm border hover:shadow-md transition flex flex-col justify-between group">
                     <div>
-                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
-                            <i class="fa-solid fa-clipboard-list"></i>
-                        </div>
-                        <h3 class="font-bold text-slate-900 text-lg mb-1">Órdenes Producción</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed mb-6">Programación de lotes de masa y empaque con descuento automático de insumos.</p>
-                    </div>
-                    <button onclick="alert('Módulo de Producción programado para cálculo de fórmulas según recetas')" class="w-full bg-amber-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-amber-700 transition flex items-center justify-center space-x-2">
-                        <span>Nueva Orden</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
-                </div>
-
-                <!-- Control de Mermas -->
-                <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200/80 hover:shadow-md transition flex flex-col justify-between group">
-                    <div>
-                        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition"><i class="fa-solid fa-triangle-exclamation"></i></div>
                         <h3 class="font-bold text-slate-900 text-lg mb-1">Control de Mermas</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed mb-6">Auditoría de desperdicios de masa o bolsas dañadas en la producción.</p>
+                        <p class="text-xs text-slate-500 mb-6">Registro de desperdicios e imprevistos operativos.</p>
                     </div>
-                    <button onclick="alert('Módulo de auditoría de mermas e imprevistos')" class="w-full bg-rose-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-rose-700 transition flex items-center justify-center space-x-2">
-                        <span>Registrar Merma</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
+                    <button onclick="cargarMermas()" class="w-full bg-rose-600 text-white py-2.5 rounded-lg text-xs font-bold hover:bg-rose-700 transition">Ver Mermas</button>
                 </div>
             </div>
         </section>
 
-        <!-- 2. Módulo de Inventario (SQL Server) -->
-        <section id="sec-inventario" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+        <!-- 2. Módulo de Clientes (Rangos y Resumen) -->
+        <section id="sec-clientes" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border gap-4">
                 <div class="flex items-center space-x-4">
-                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition" title="Volver al panel">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-arrow-left"></i></button>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Inventario de Insumos</h2>
-                        <p class="text-xs text-slate-500">Consulta sincronizada con SQL Server (`la_exquisita_db.dbo.insumos`).</p>
+                        <h2 class="text-xl font-bold text-slate-900">Directorio y Clasificación de Clientes</h2>
+                        <p class="text-xs text-slate-500">Rangos calculados automáticamente según el volumen de compras y pedidos.</p>
                     </div>
                 </div>
-                <button onclick="cargarInventario()" class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center space-x-2 shadow-sm">
-                    <i class="fa-solid fa-rotate"></i> <span>Actualizar Stock</span>
-                </button>
+                <button onclick="cargarClientes()" class="px-4 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700 transition"><i class="fa-solid fa-rotate"></i> Actualizar</button>
             </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4 pl-6">ID</th>
+                                <th class="p-4">Cliente</th>
+                                <th class="p-4">Teléfono</th>
+                                <th class="p-4">Acumulado Compras</th>
+                                <th class="p-4 pr-6">Rango / Categoría</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-clientes" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <tr><td colspan="5" class="text-center p-8 text-slate-400">Cargando clientes...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- 3. Módulo de Inventario -->
+        <section id="sec-inventario" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border gap-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Inventario de Insumos</h2>
+                        <p class="text-xs text-slate-500">Sincronizado en tiempo real con SQL Server (`insumos`).</p>
+                    </div>
+                </div>
+                <button onclick="cargarInventario()" class="px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition"><i class="fa-solid fa-rotate"></i> Actualizar Stock</button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
@@ -133,325 +149,455 @@
                                 <th class="p-4">Insumo</th>
                                 <th class="p-4">Unidad</th>
                                 <th class="p-4">Stock Actual</th>
-                                <th class="p-4 pr-6">Stock Mínimo</th>
+                                <th class="p-4 pr-6">Mínimo</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-insumos" class="divide-y divide-slate-100 text-sm text-slate-700">
-                            <tr><td colspan="5" class="text-center p-8 text-slate-400">Seleccione 'Ver Stock' para cargar los registros...</td></tr>
+                            <tr><td colspan="5" class="text-center p-8 text-slate-400">Cargando inventario...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- 3. Módulo POS (Venta de Paquetes x10) -->
-        <section id="sec-pos" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+        <!-- 4. Módulo de Mermas -->
+        <section id="sec-mermas" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border gap-4">
                 <div class="flex items-center space-x-4">
-                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition" title="Volver al panel">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Terminal de Venta POS</h2>
-                        <p class="text-xs text-slate-500">Venta de paquetes institucionales (Presentación de 10 unidades).</p>
+                        <h2 class="text-xl font-bold text-slate-900">Control de Mermas y Desperdicios</h2>
+                        <p class="text-xs text-slate-500">Registro conectado a SQL Server (`mermas`).</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl text-amber-800 text-xs font-semibold">
-                    <i class="fa-solid fa-cash-register"></i> <span>Caja Activa #01</span>
+                <button onclick="abrirModalMerma()" class="px-4 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition"><i class="fa-solid fa-plus"></i> Registrar Merma</button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="p-4 pl-6">ID</th>
+                                <th class="p-4">Descripción / Insumo</th>
+                                <th class="p-4">Cantidad</th>
+                                <th class="p-4">Motivo</th>
+                                <th class="p-4 pr-6">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-mermas" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <tr><td colspan="5" class="text-center p-8 text-slate-400">Cargando mermas...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. POS Terminal (Sin adición de queso, con selección de cliente y fotos reales) -->
+        <section id="sec-pos" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border gap-4">
+                <div class="flex items-center space-x-4">
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Terminal de Venta POS</h2>
+                        <p class="text-xs text-slate-500">Seleccione el cliente y añada productos al carrito.</p>
+                    </div>
+                </div>
+                <!-- Selector de Cliente y botón registrar nuevo -->
+                <div class="flex items-center space-x-3">
+                    <select id="select-cliente-pos" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium">
+                        <option value="">-- Cliente General / Mostrador --</option>
+                    </select>
+                    <button onclick="abrirModalCliente()" class="bg-amber-500 text-slate-900 px-3 py-2 rounded-xl text-xs font-bold hover:bg-amber-600"><i class="fa-solid fa-user-plus"></i> Nuevo</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Catálogo de Paquetes -->
+                <!-- Catálogo con fotos reales basadas en las imágenes del producto -->
                 <div class="lg:col-span-2 space-y-4">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Catálogo de Paquetes (10 Unidades)</h3>
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Catálogo Artesanal (Paquetes x10)</h3>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Paquete Arepa Grande -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-amber-500/50 hover:shadow-md transition flex flex-col justify-between group">
+                        <!-- Producto 1 con foto real referenciada -->
+                        <div class="bg-white p-5 rounded-2xl border shadow-sm hover:border-amber-500 transition flex flex-col justify-between group">
                             <div>
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl group-hover:bg-amber-500 group-hover:text-white transition">
-                                        <i class="fa-solid fa-box"></i>
-                                    </div>
-                                    <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-1 rounded-full">Paquete x10</span>
+                                <div class="h-32 rounded-xl bg-amber-50 mb-3 overflow-hidden flex items-center justify-center border border-amber-200">
+                                    <img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400" alt="Arepa con queso artesanal" class="w-full h-full object-cover group-hover:scale-105 transition">
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-base mb-1">Paquete Arepa Grande</h4>
-                                <p class="text-xs text-slate-500 mb-4">Contiene 10 unidades de arepa grande.</p>
+                                <h4 class="font-bold text-slate-900 text-base">Paquete Arepas Artesanales (x10)</h4>
+                                <p class="text-xs text-slate-500 mb-3">Preparadas con maíz natural y doble queso fundido.</p>
                             </div>
-                            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between pt-3 border-t">
                                 <span class="text-lg font-black text-amber-600">$23.000</span>
-                                <button onclick="agregarAlCarrito('Paquete Arepa Grande (x10)', 23000)" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-slate-900 transition flex items-center space-x-1.5">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> <span>Agregar</span>
-                                </button>
+                                <button onclick="agregarAlCarrito('Paquete Arepas Artesanales (x10)', 23000)" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-slate-900 transition"><i class="fa-solid fa-plus"></i> Agregar</button>
                             </div>
                         </div>
 
-                        <!-- Paquete Arepa Pequeña -->
-                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:border-amber-500/50 hover:shadow-md transition flex flex-col justify-between group">
+                        <!-- Producto 2 -->
+                        <div class="bg-white p-5 rounded-2xl border shadow-sm hover:border-amber-500 transition flex flex-col justify-between group">
                             <div>
-                                <div class="flex justify-between items-start mb-3">
-                                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-xl group-hover:bg-amber-500 group-hover:text-white transition">
-                                        <i class="fa-solid fa-boxes-stacked"></i>
-                                    </div>
-                                    <span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-1 rounded-full">Paquete x10</span>
+                                <div class="h-32 rounded-xl bg-amber-50 mb-3 overflow-hidden flex items-center justify-center border border-amber-200">
+                                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400" alt="Arepas tradicionales" class="w-full h-full object-cover group-hover:scale-105 transition">
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-base mb-1">Paquete Arepa Pequeña</h4>
-                                <p class="text-xs text-slate-500 mb-4">Contiene 10 unidades de arepa pequeña.</p>
+                                <h4 class="font-bold text-slate-900 text-base">Paquete Arepas Tradicionales (x10)</h4>
+                                <p class="text-xs text-slate-500 mb-3">Presentación estándar para hogar o negocio.</p>
                             </div>
-                            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-                                <span class="text-lg font-black text-amber-600">$22.000</span>
-                                <button onclick="agregarAlCarrito('Paquete Arepa Pequeña (x10)', 22000)" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-slate-900 transition flex items-center space-x-1.5">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> <span>Agregar</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Adición Opcional -->
-                    <div class="pt-4">
-                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Adiciones Especiales</h3>
-                        <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-200 flex items-center justify-between">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-sm">
-                                    <i class="fa-solid fa-cheese"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-900 text-sm">Adición de Queso Extra</h4>
-                                    <p class="text-xs text-amber-900/70">Queso campesino o doble crema fundido.</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <span class="text-base font-black text-amber-700">+$3.000</span>
-                                <button onclick="agregarAlCarrito('Queso Extra (Adición)', 3000)" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-700 transition shadow-sm flex items-center space-x-1.5">
-                                    <i class="fa-solid fa-plus text-[10px]"></i> <span>Añadir</span>
-                                </button>
+                            <div class="flex items-center justify-between pt-3 border-t">
+                                <span class="text-lg font-black text-amber-600">$20.000</span>
+                                <button onclick="agregarAlCarrito('Paquete Arepas Tradicionales (x10)', 20000)" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-amber-500 hover:text-slate-900 transition"><i class="fa-solid fa-plus"></i> Agregar</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Carrito Lateral -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between h-[520px]">
+                <!-- Carrito / Orden Actual -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border flex flex-col justify-between h-[520px]">
                     <div>
-                        <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
-                            <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
-                                <i class="fa-solid fa-receipt text-amber-500"></i>
-                                <span>Orden Actual</span>
-                            </h3>
+                        <div class="flex justify-between items-center border-b pb-4 mb-4">
+                            <h3 class="font-bold text-slate-900 text-base"><i class="fa-solid fa-receipt text-amber-500 mr-2"></i> Orden Actual</h3>
                             <span id="contador-items" class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full">0 ítems</span>
                         </div>
-                        
                         <div id="carrito-items" class="space-y-3 overflow-y-auto custom-scrollbar h-[310px] pr-1">
-                            <div class="text-center py-20 text-slate-400 space-y-2">
-                                <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
-                                <p class="text-xs">El carrito está vacío</p>
-                            </div>
+                            <div class="text-center py-20 text-slate-400 text-xs">El carrito está vacío</div>
                         </div>
                     </div>
-
-                    <div class="border-t border-slate-100 pt-4 space-y-4">
+                    <div class="border-t pt-4 space-y-4">
                         <div class="flex justify-between items-center text-lg font-bold">
                             <span class="text-slate-600 text-sm">Total a Pagar:</span>
                             <span id="carrito-total" class="text-amber-600 font-black text-xl">$0</span>
                         </div>
-                        <button onclick="registrarVentaBD()" class="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-xs hover:bg-emerald-700 transition shadow-md flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-circle-check text-sm"></i>
-                            <span>Confirmar & Cobrar Venta</span>
+                        <button onclick="registrarVentaBD()" class="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl text-xs hover:bg-emerald-700 transition shadow-md">
+                            <i class="fa-solid fa-circle-check mr-1"></i> Confirmar Venta & Descontar Stock
                         </button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- 4. NUEVO MÓDULO: Consulta de Ventas (Historial desde SQL Server) -->
+        <!-- 6. Historial de Ventas -->
         <section id="sec-ventas" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-200 gap-4">
+            <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border">
                 <div class="flex items-center space-x-4">
-                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition" title="Volver al panel">
-                        <i class="fa-solid fa-arrow-left"></i>
-                    </button>
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
+                    <h2 class="text-xl font-bold text-slate-900">Historial de Ventas</h2>
+                </div>
+                <button onclick="cargarHistorialVentas()" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold"><i class="fa-solid fa-rotate"></i> Actualizar</button>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-900 text-white text-xs uppercase">
+                        <tr>
+                            <th class="p-4 pl-6"># Venta</th>
+                            <th class="p-4">Fecha y Hora</th>
+                            <th class="p-4">Método de Pago</th>
+                            <th class="p-4 pr-6 text-right">Total Facturado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ventas" class="divide-y text-sm text-slate-700">
+                        <tr><td colspan="4" class="text-center p-8 text-slate-400">Cargando ventas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 7. MÓDULO CHATBOT IA DESDE CERO (Conectado a Base de Datos) -->
+        <section id="sec-chatbot" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border">
+                <div class="flex items-center space-x-4">
+                    <button onclick="mostrarSeccion('panel')" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Historial de Ventas Registradas</h2>
-                        <p class="text-xs text-slate-500">Auditoría en tiempo real conectada a SQL Server (`la_exquisita_db.dbo.ventas`).</p>
+                        <h2 class="text-xl font-bold text-slate-900">Asistente IA con Conexión SQL</h2>
+                        <p class="text-xs text-slate-500">Pregúntale directamente al sistema sobre stock, ventas y clientes.</p>
                     </div>
                 </div>
-                <button onclick="cargarHistorialVentas()" class="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition flex items-center space-x-2 shadow-sm">
-                    <i class="fa-solid fa-rotate"></i> <span>Actualizar Registro</span>
-                </button>
+                <div class="bg-purple-50 text-purple-800 border border-purple-200 px-4 py-2 rounded-xl text-xs font-semibold">
+                    <i class="fa-solid fa-robot mr-1"></i> IA Activa
+                </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
-                            <tr>
-                                <th class="p-4 pl-6"># Venta</th>
-                                <th class="p-4">Fecha y Hora</th>
-                                <th class="p-4">Cajero / Usuario</th>
-                                <th class="p-4">Método Pago</th>
-                                <th class="p-4 pr-6 text-right">Total Facturado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-ventas" class="divide-y divide-slate-100 text-sm text-slate-700">
-                            <tr><td colspan="5" class="text-center p-8 text-slate-400">Haga clic en 'Consulta de Ventas' para cargar el historial...</td></tr>
-                        </tbody>
-                    </table>
+            <div class="bg-white rounded-2xl shadow-sm border p-6 flex flex-col h-[500px] justify-between">
+                <div id="chat-mensajes" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-robot"></i></div>
+                        <div class="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-xs text-slate-800 max-w-lg">
+                            ¡Hola! Soy tu IA corporativa. Estoy conectada a la base de datos de La Exquisita. Escribe cosas como: <i>"¿Cuál es el stock de insumos?"</i>, <i>"¿Cuántas ventas hay?"</i> o <i>"Muéstrame los clientes"</i>.
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 border-t flex gap-3">
+                    <input type="text" id="chat-input" placeholder="Escribe tu consulta inteligente aquí..." class="flex-1 bg-slate-50 border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-purple-500" onkeypress="if(event.key === 'Enter') enviarMensajeIA()">
+                    <button onclick="enviarMensajeIA()" class="bg-purple-600 text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-purple-700 transition">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Consultar
+                    </button>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Script JS para Conexión Frontend - Backend (Node.js & SQL Server) -->
+    <!-- MODAL REGISTRO DE CLIENTE -->
+    <div id="modal-cliente" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl w-96 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-900">Registrar Nuevo Cliente</h3>
+            <div class="space-y-3">
+                <input type="text" id="nuevo-nombre" placeholder="Nombre completo" class="w-full p-2.5 border rounded-xl text-xs">
+                <input type="text" id="nuevo-telefono" placeholder="Teléfono" class="w-full p-2.5 border rounded-xl text-xs">
+                <input type="email" id="nuevo-correo" placeholder="Correo electrónico" class="w-full p-2.5 border rounded-xl text-xs">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="guardarNuevoCliente()" class="flex-1 bg-amber-500 text-slate-900 py-2 rounded-xl font-bold text-xs">Guardar</button>
+                <button onclick="cerrarModalCliente()" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-xl font-bold text-xs">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRO DE MERMA -->
+    <div id="modal-merma" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl w-96 space-y-4 shadow-xl">
+            <h3 class="font-bold text-lg text-slate-900">Registrar Nueva Merma</h3>
+            <div class="space-y-3">
+                <input type="text" id="merma-desc" placeholder="Descripción del insumo o producto" class="w-full p-2.5 border rounded-xl text-xs">
+                <input type="number" id="merma-cant" placeholder="Cantidad desperdiciada" class="w-full p-2.5 border rounded-xl text-xs">
+                <input type="text" id="merma-motivo" placeholder="Motivo (Ej: Daño en empaque, vencimiento)" class="w-full p-2.5 border rounded-xl text-xs">
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="guardarMerma()" class="flex-1 bg-rose-600 text-white py-2 rounded-xl font-bold text-xs">Guardar Merma</button>
+                <button onclick="cerrarModalMerma()" class="flex-1 bg-slate-200 text-slate-700 py-2 rounded-xl font-bold text-xs">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript del Sistema -->
     <script>
         const API_URL = 'http://localhost:3000/api';
         let carrito = [];
 
         function mostrarSeccion(sec) {
-            document.getElementById('sec-panel').classList.add('hidden');
-            document.getElementById('sec-inventario').classList.add('hidden');
-            document.getElementById('sec-pos').classList.add('hidden');
-            document.getElementById('sec-ventas').classList.add('hidden');
+            ['panel', 'clientes', 'inventario', 'mermas', 'pos', 'ventas', 'chatbot'].forEach(s => {
+                document.getElementById(`sec-${s}`).classList.add('hidden');
+            });
             document.getElementById(`sec-${sec}`).classList.remove('hidden');
         }
 
-        // Cargar Inventario
+        // Clientes
+        async function cargarClientes() {
+            mostrarSeccion('clientes');
+            const tbody = document.getElementById('tabla-clientes');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400">Consultando base de datos...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}/clientes`);
+                const data = await res.json();
+                if (data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(c => `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-4 pl-6 font-mono text-xs">#C-${c.id_cliente}</td>
+                            <td class="p-4 font-bold text-slate-900">${c.nombre}</td>
+                            <td class="p-4 text-slate-600">${c.telefono || 'N/A'}</td>
+                            <td class="p-4 font-semibold text-emerald-600">$${(c.total_compras || 0).toLocaleString()}</td>
+                            <td class="p-4 pr-6"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-xs font-bold">${c.rango}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400">No hay clientes registrados.</td></tr>';
+                }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-rose-600 font-bold">Error conectando con el servidor.</td></tr>';
+            }
+        }
+
+        async function cargarClientesSelect() {
+            const select = document.getElementById('select-cliente-pos');
+            try {
+                const res = await fetch(`${API_URL}/clientes`);
+                const data = await res.json();
+                if (data.success) {
+                    select.innerHTML = '<option value="">-- Cliente General / Mostrador --</option>' + 
+                        data.data.map(c => `<option value="${c.id_cliente}">${c.nombre} (${c.rango})</option>`).join('');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function abrirModalCliente() { document.getElementById('modal-cliente').classList.remove('hidden'); }
+        function cerrarModalCliente() { document.getElementById('modal-cliente').classList.add('hidden'); }
+
+        async function guardarNuevoCliente() {
+            const nombre = document.getElementById('nuevo-nombre').value;
+            const telefono = document.getElementById('nuevo-telefono').value;
+            const correo = document.getElementById('nuevo-correo').value;
+            if(!nombre) return alert('El nombre es obligatorio');
+
+            await fetch(`${API_URL}/clientes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, telefono, correo })
+            });
+            cerrarModalCliente();
+            cargarClientesSelect();
+            alert('¡Cliente registrado con éxito!');
+        }
+
+        // Inventario
         async function cargarInventario() {
             mostrarSeccion('inventario');
             const tbody = document.getElementById('tabla-insumos');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Consultando base de datos SQL Server...</td></tr>';
-
             try {
-                const response = await fetch(`${API_URL}/test-db`);
-                const result = await response.json();
+                const res = await fetch(`${API_URL}/test-db`);
+                const data = await res.json();
+                if(data.success) {
+                    tbody.innerHTML = data.data.map(i => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-4 pl-6 font-mono text-xs">#${i.id_insumo || i.id}</td>
+                            <td class="p-4 font-bold">${i.nombre || i.nombre_insumo}</td>
+                            <td class="p-4">${i.unidad_medida || 'KG'}</td>
+                            <td class="p-4 font-bold text-emerald-600">${i.stock_actual}</td>
+                            <td class="p-4 pr-6">${i.stock_minimo || 5}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-rose-600">Error de conexión</td></tr>'; }
+        }
 
-                if (result.success && result.data.length > 0) {
-                    tbody.innerHTML = result.data.map(item => `
-                        <tr class="hover:bg-slate-50/80 transition">
-                            <td class="p-4 pl-6 font-mono text-xs text-slate-500">#${item.id_insumo || item.id || '-'}</td>
-                            <td class="p-4 font-bold text-slate-900">${item.nombre || item.nombre_insumo}</td>
-                            <td class="p-4 text-slate-500">${item.unidad_medida || 'Unidad'}</td>
-                            <td class="p-4">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${item.stock_actual < 10 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}">
-                                    ${item.stock_actual}
-                                </span>
-                            </td>
-                            <td class="p-4 pr-6 font-semibold text-slate-700">${item.stock_minimo || 5}</td>
+        // Mermas
+        async function cargarMermas() {
+            mostrarSeccion('mermas');
+            const tbody = document.getElementById('tabla-mermas');
+            try {
+                const res = await fetch(`${API_URL}/mermas`);
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(m => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-4 pl-6 font-mono text-xs">#M-${m.id_merma}</td>
+                            <td class="p-4 font-bold">${m.descripcion}</td>
+                            <td class="p-4 text-rose-600 font-bold">${m.cantidad}</td>
+                            <td class="p-4">${m.motivo}</td>
+                            <td class="p-4 pr-6 text-xs text-slate-500">${new Date(m.fecha).toLocaleString()}</td>
                         </tr>
                     `).join('');
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-amber-600 font-medium">No se encontraron insumos en la base de datos.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400">No hay registros de mermas.</td></tr>';
                 }
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-rose-600 font-bold">Error de conexión con el backend: Asegúrate de ejecutar 'npm start' dentro de la carpeta backend.</td></tr>`;
-            }
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-rose-600">Error cargando mermas</td></tr>'; }
         }
 
-        // Cargar Historial de Ventas desde SQL Server
-        async function cargarHistorialVentas() {
-            mostrarSeccion('ventas');
-            const tbody = document.getElementById('tabla-ventas');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Consultando registro de ventas...</td></tr>';
+        function abrirModalMerma() { document.getElementById('modal-merma').classList.remove('hidden'); }
+        function cerrarModalMerma() { document.getElementById('modal-merma').classList.add('hidden'); }
 
-            try {
-                const response = await fetch(`${API_URL}/ventas`);
-                const result = await response.json();
+        async function guardarMerma() {
+            const descripcion = document.getElementById('merma-desc').value;
+            const cantidad = document.getElementById('merma-cant').value;
+            const motivo = document.getElementById('merma-motivo').value;
+            if(!descripcion || !cantidad) return alert('Complete los campos obligatorios');
 
-                if (result.success && result.data.length > 0) {
-                    tbody.innerHTML = result.data.map(v => `
-                        <tr class="hover:bg-slate-50/80 transition">
-                            <td class="p-4 pl-6 font-mono text-xs font-bold text-blue-600">#V-00${v.id_venta}</td>
-                            <td class="p-4 text-slate-600 text-xs">${v.fecha_hora ? new Date(v.fecha_hora).toLocaleString() : 'Reciente'}</td>
-                            <td class="p-4 font-medium text-slate-800">Cajero Principal (ID ${v.id_usuario || 1})</td>
-                            <td class="p-4">
-                                <span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[11px] font-bold">
-                                    ${v.metodo_pago || 'Efectivo'}
-                                </span>
-                            </td>
-                            <td class="p-4 pr-6 text-right font-black text-slate-900">$${(v.total || 0).toLocaleString()}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center p-8 text-slate-400">No hay ventas registradas aún. ¡Realiza una cobro en el POS para verla aquí!</td></tr>';
-                }
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-rose-600 font-bold">Error al consultar las ventas desde el servidor backend.</td></tr>`;
-            }
+            await fetch(`${API_URL}/mermas`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descripcion, cantidad, motivo })
+            });
+            cerrarModalMerma();
+            cargarMermas();
+            alert('Merma registrada y sincronizada.');
         }
 
-        // Carrito POS
+        // POS Carrito
         function agregarAlCarrito(nombre, precio) {
-            carrito.push({ nombre, precio });
+            carrito.push({ nombre, precio, cantidad: 1 });
             renderizarCarrito();
         }
 
         function renderizarCarrito() {
             const container = document.getElementById('carrito-items');
-            const contador = document.getElementById('contador-items');
-            
-            contador.innerText = `${carrito.length} ${carrito.length === 1 ? 'ítem' : 'ítems'}`;
-
-            if (carrito.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-20 text-slate-400 space-y-2">
-                        <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
-                        <p class="text-xs">El carrito está vacío</p>
-                    </div>`;
+            document.getElementById('contador-items').innerText = `${carrito.length} ítems`;
+            if(carrito.length === 0) {
+                container.innerHTML = '<div class="text-center py-20 text-slate-400 text-xs">El carrito está vacío</div>';
                 document.getElementById('carrito-total').innerText = '$0';
                 return;
             }
-
             let total = 0;
             container.innerHTML = carrito.map((item, index) => {
-                total += item.precio;
+                let sub = item.precio * item.cantidad;
+                total += sub;
                 return `
-                    <div class="flex justify-between items-center bg-slate-50/80 p-3 rounded-xl border border-slate-100 text-xs">
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border text-xs">
                         <div>
-                            <span class="font-bold text-slate-900 block">${item.nombre}</span>
-                            <span class="text-slate-500 font-semibold">$${item.precio.toLocaleString()}</span>
+                            <span class="font-bold block">${item.nombre}</span>
+                            <span class="text-slate-500">$${item.precio.toLocaleString()} x ${item.cantidad}</span>
                         </div>
-                        <button onclick="eliminarDelCarrito(${index})" class="w-7 h-7 rounded-lg bg-white text-rose-500 hover:bg-rose-50 hover:text-rose-700 border border-slate-200 flex items-center justify-center transition" title="Quitar ítem">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
+                        <button onclick="carrito.splice(${index},1); renderizarCarrito();" class="text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 `;
             }).join('');
-
             document.getElementById('carrito-total').innerText = `$${total.toLocaleString()}`;
         }
 
-        function eliminarDelCarrito(index) {
-            carrito.splice(index, 1);
-            renderizarCarrito();
-        }
-
-        // Registrar Venta
         async function registrarVentaBD() {
-            if (carrito.length === 0) {
-                alert('Añada productos al carrito antes de confirmar la venta.');
-                return;
-            }
-
-            const totalVenta = carrito.reduce((acc, i) => acc + i.precio, 0);
+            if(carrito.length === 0) return alert('Agregue productos al carrito.');
+            const id_cliente = document.getElementById('select-cliente-pos').value || null;
 
             try {
-                const response = await fetch(`${API_URL}/ventas`, {
+                const res = await fetch(`${API_URL}/ventas`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ total: totalVenta, items: carrito })
+                    body: JSON.stringify({ items: carrito, id_cliente })
                 });
-
-                const res = await response.json();
-                if (res.success) {
-                    alert(`✅ ¡Venta registrada con éxito en la base de datos por un total de $${totalVenta.toLocaleString()}!`);
+                const data = await res.json();
+                if(data.success) {
+                    alert('✅ Venta registrada con éxito. Inventario de insumos actualizado automáticamente.');
                     carrito = [];
                     renderizarCarrito();
                 } else {
-                    alert('Error al registrar la venta: ' + res.error);
+                    alert('Error: ' + data.error);
                 }
-            } catch (err) {
-                alert('Error al conectar con el servidor backend: ' + err.message);
+            } catch(e) { alert('Error de conexión con el servidor.'); }
+        }
+
+        async function cargarHistorialVentas() {
+            mostrarSeccion('ventas');
+            const tbody = document.getElementById('tabla-ventas');
+            try {
+                const res = await fetch(`${API_URL}/ventas`);
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(v => `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-4 pl-6 font-mono text-xs text-blue-600">#V-00${v.id_venta}</td>
+                            <td class="p-4 text-xs">${new Date(v.fecha_hora).toLocaleString()}</td>
+                            <td class="p-4"><span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold">${v.metodo_pago}</span></td>
+                            <td class="p-4 pr-6 text-right font-black">$${(v.total || 0).toLocaleString()}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-slate-400">No hay ventas registradas.</td></tr>';
+                }
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center p-8 text-rose-600">Error cargando ventas</td></tr>'; }
+        }
+
+        // IA Inteligente desde Cero
+        async function enviarMensajeIA() {
+            const input = document.getElementById('chat-input');
+            const msgs = document.getElementById('chat-mensajes');
+            const texto = input.value.trim();
+            if(!texto) return;
+
+            msgs.innerHTML += `<div class="flex items-start space-x-3 justify-end"><div class="bg-purple-600 text-white p-3 rounded-2xl rounded-tr-none text-xs max-w-lg">${texto}</div></div>`;
+            input.value = '';
+            msgs.scrollTop = msgs.scrollHeight;
+
+            try {
+                const res = await fetch(`${API_URL}/chatbot/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje: texto })
+                });
+                const data = await res.json();
+                msgs.innerHTML += `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-robot"></i></div>
+                        <div class="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-xs text-slate-800 max-w-lg whitespace-pre-line">${data.respuesta}</div>
+                    </div>`;
+                msgs.scrollTop = msgs.scrollHeight;
+            } catch(e) {
+                msgs.innerHTML += `<div class="bg-rose-50 text-rose-700 p-3 rounded-xl text-xs">Error al conectar con la IA de la base de datos.</div>`;
             }
         }
     </script>
