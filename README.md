@@ -6,7 +6,6 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 * **Stack:** HTML + CSS + JavaScript (módulos) · Node.js + Express · SQL Server
 * **Arquitectura:** ver [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) (capas del front y del back, modelo de datos, seguridad y colorimetría)
 
-![Inicio](docs/capturas/inicio.jpg)
 
 ---
 
@@ -23,7 +22,6 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 | **Asistente IA** | Responde con cifras reales de la base de datos: “¿cuánto maíz hay?”, “¿cuántos paquetes grandes puedo hacer?”, “¿cuántas arepas pequeñas se vendieron esta semana?”, “¿qué debo comprar?”, “¿cuánto ha comprado Tienda Don Pepe?”… Funciona sin internet (motor local) y opcionalmente con OpenAI. |
 
 ![POS](docs/capturas/pos.jpg)
-
 ---
 
 ## Estructura
@@ -31,7 +29,7 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 ```
 ST_G6_LaExquisita/
 ├── backend/                     ← API REST (Node.js + Express)
-│   ├── server.js                  arranque (no se cae si SQL Server está apagado)
+│   ├── server.js                  arranque
 │   ├── src/
 │   │   ├── app.js                 middlewares + rutas + frontend estático
 │   │   ├── config/                env.js (.env) · database.js (pool SQL Server)
@@ -45,8 +43,8 @@ ST_G6_LaExquisita/
 │   ├── scripts/                   migrar.js · crear-usuario.js
 │   ├── test/                      pruebas unitarias (npm test)
 │   └── .env.example               plantilla de configuración
-├── frontend/                    ← Interfaz (la sirve el backend)
-│   ├── index.html                 estructura (sin lógica)
+├── frontend/                    ← Interfaz
+│   ├── index.html                 estructura
 │   ├── css/styles.css             estilos y colorimetría del logo
 │   ├── js/
 │   │   ├── main.js                punto de entrada
@@ -56,7 +54,7 @@ ST_G6_LaExquisita/
 │   │   ├── components/            modales, toasts, selector de cliente
 │   │   └── utils/                 escape anti-XSS, formatos COP
 │   ├── assets/img/                logo, arepa grande, arepa pequeña
-│   └── vendor/                    íconos y fuentes locales (funciona sin internet)
+│   └── vendor/                    íconos y fuentes locales
 ├── database/
 │   ├── schema.sql                 esquema idempotente (crea/actualiza sin borrar datos)
 │   ├── seed.sql                   datos iniciales idempotentes
@@ -70,7 +68,7 @@ ST_G6_LaExquisita/
 
 ### Requisitos
 * **Node.js
-* **SQL Server** (el equipo usa la instancia `localhost\SQL2025`)
+* **SQL Server** (instancia `localhost\SQL2025`)
 * Para autenticación de Windows: el driver **ODBC Driver 17 u 18 for SQL Server**
 
 ### 1. Instalar dependencias
@@ -93,9 +91,6 @@ DB_INSTANCE=SQL2025
 DB_NAME=la_exquisita_db
 JWT_SECRET=pon_aqui_una_cadena_aleatoria_de_32_o_mas_caracteres
 ```
-> Genera el `JWT_SECRET` con: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
->
-> ¿Usas usuario y contraseña de SQL Server? Pon `DB_AUTH=sql`, `DB_USER` y `DB_PASSWORD`.
 
 ### 3. Arrancar
 ```bash
@@ -118,7 +113,7 @@ Para crear más usuarios:
 npm run crear-usuario -- --nombre "Ana Pérez" --correo ana@laexquisita.com --rol cocina --password "Cocina2026"
 ```
 
-## 🩺 Si algo falla
+## Si algo falla
 
 Abre **http://localhost:3000/api/health**: dice si hay conexión, qué driver se usó y una **sugerencia en español** del problema. La interfaz también muestra un aviso rojo arriba y se reconecta sola cuando SQL Server vuelve.
 
@@ -144,13 +139,13 @@ OPENAI_MODEL=gpt-5.5
 ```
 Si OpenAI falla, responde automáticamente el motor local. La IA es de **solo lectura**.
 
-## ✅ Pruebas
+## Pruebas
 ```bash
 cd backend
 npm test
 ```
 
-## 🛠️ Ajustes frecuentes
+## Ajustes frecuentes
 * **Precios:** `UPDATE dbo.productos SET precio = 24000, precio_unidad = 2500 WHERE tamano = 'grande';`
 * **Recetas (gasto por arepa):** tabla `dbo.recetas`.
 * **Logo:** reemplaza `frontend/assets/img/logo.png` (cuadrado, ideal 256×256).
