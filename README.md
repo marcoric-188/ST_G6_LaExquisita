@@ -1,4 +1,4 @@
-# 🌽 La Exquisita · Sistema POS & ERP
+# La Exquisita · Sistema POS & ERP
 
 Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choclo: ventas de mostrador por **paquete (x10) o por unidad**, clientes con rangos, inventario de insumos con kardex, control de mermas y un **asistente IA conectado en vivo a SQL Server**.
 
@@ -10,7 +10,7 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 
 ---
 
-## ✨ Qué hace
+## Qué hace
 
 | Módulo | Descripción |
 |--------|-------------|
@@ -26,7 +26,7 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 
 ---
 
-## 📁 Estructura
+## Estructura
 
 ```
 ST_G6_LaExquisita/
@@ -66,12 +66,12 @@ ST_G6_LaExquisita/
 
 ---
 
-## 🚀 Puesta en marcha (Windows + SQL Server)
+## Puesta en marcha (Windows + SQL Server)
 
 ### Requisitos
-* **Node.js 18.19 o superior** (recomendado 20 o 22 LTS)
+* **Node.js
 * **SQL Server** (el equipo usa la instancia `localhost\SQL2025`)
-* Para autenticación de Windows: el driver **ODBC Driver 17 u 18 for SQL Server** (si usas SSMS reciente ya lo tienes)
+* Para autenticación de Windows: el driver **ODBC Driver 17 u 18 for SQL Server**
 
 ### 1. Instalar dependencias
 ```bash
@@ -103,9 +103,7 @@ npm start
 ```
 El backend **crea o actualiza la base de datos automáticamente** (ejecuta `database/schema.sql` y `seed.sql`, que no borran datos). Luego abre:
 
-👉 **http://localhost:3000**
-
-> ⚠️ Ya no se abre `index.html` con doble clic: la página la entrega el servidor (así funciona el inicio de sesión y la conexión).
+ **http://localhost:3000**
 
 ### 4. Iniciar sesión
 | Usuario | Rol | Contraseña temporal |
@@ -120,11 +118,6 @@ Para crear más usuarios:
 npm run crear-usuario -- --nombre "Ana Pérez" --correo ana@laexquisita.com --rol cocina --password "Cocina2026"
 ```
 
-### ¿Prefieres ejecutar el SQL a mano en SSMS?
-Abre y ejecuta (F5) `database/schema.sql` y luego `database/seed.sql`. Se pueden correr varias veces sin problema. Si lo haces así, puedes poner `DB_AUTO_MIGRATE=false`.
-
----
-
 ## 🩺 Si algo falla
 
 Abre **http://localhost:3000/api/health**: dice si hay conexión, qué driver se usó y una **sugerencia en español** del problema. La interfaz también muestra un aviso rojo arriba y se reconecta sola cuando SQL Server vuelve.
@@ -138,11 +131,11 @@ Abre **http://localhost:3000/api/health**: dice si hay conexión, qué driver se
 
 ---
 
-## 🔐 Seguridad básica
+## Seguridad básica
 
 Inicio de sesión con contraseñas **bcrypt**, sesión en **cookie httpOnly** (JWT), **roles** validados en el servidor (administrador, cajero, cocina), bloqueo tras 5 intentos fallidos, **consultas parametrizadas** (anti inyección SQL), **escape automático** y **Content-Security-Policy** (anti XSS), solo JSON en la API (anti CSRF), límites de peticiones, validación de todas las entradas y precios calculados en el servidor. Detalle en [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md#4-seguridad-básica-implementada).
 
-## 🤖 Asistente IA
+## Asistente IA
 
 Por defecto usa el **motor local** (gratis, sin internet): entiende la pregunta en español y responde con las cantidades exactas de SQL Server. Para usar OpenAI agrega en `.env`:
 ```ini
