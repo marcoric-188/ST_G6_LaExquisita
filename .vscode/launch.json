@@ -2,10 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Backend La Exquisita (npm start)",
+            "cwd": "${workspaceFolder}/backend",
+            "program": "${workspaceFolder}/backend/server.js"
+        },
+        {
             "type": "chrome",
             "request": "launch",
-            "name": "Abrir La Exquisita (index.html)",
-            "file": "${workspaceFolder}/index.html"
+            "name": "Abrir La Exquisita en Chrome",
+            "url": "http://localhost:3000"
         }
     ]
 }

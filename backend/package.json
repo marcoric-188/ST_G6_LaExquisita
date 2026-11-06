@@ -1,17 +1,30 @@
 {
   "name": "la-exquisita-backend",
-  "version": "1.0.0",
-  "description": "Estructura inicial de backend para el sistema transaccional La Exquisita",
+  "version": "3.0.0",
+  "description": "API REST por capas (rutas, controladores, servicios, repositorios) del sistema POS & ERP La Exquisita sobre SQL Server",
   "main": "server.js",
+  "private": true,
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "node --watch server.js",
+    "migrar": "node scripts/migrar.js",
+    "crear-usuario": "node scripts/crear-usuario.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18.19"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "msnodesqlv8": "^5.5.0",
-    "mssql": "^10.0.2"
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "express-rate-limit": "^8.3.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mssql": "^12.7.14"
+  },
+  "optionalDependencies": {
+    "msnodesqlv8": "^5.5.0"
   }
 }

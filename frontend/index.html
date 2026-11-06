@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Exquisita | POS & ERP</title>
+    <meta name="description" content="Sistema POS & ERP de La Exquisita: ventas, clientes, insumos, mermas e IA conectados a SQL Server.">
+    <meta name="theme-color" content="#2B1B11">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <!-- Fuentes e íconos locales: el POS funciona aunque se caiga el internet del local -->
+    <link rel="stylesheet" href="vendor/fuentes/fuentes.css">
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <!--
+      ==========================================================================
+      CAPA DE PRESENTACIÓN (FRONTEND) · Estructura de la página
+      --------------------------------------------------------------------------
+      index.html   -> SOLO estructura (vistas, formularios, modales). Sin lógica.
+      css/         -> estilos y colorimetría (tokens tomados del logo).
+      js/views/    -> controlador de cada vista (eventos y pintado).
+      js/services/ -> llamadas a la API REST (única capa que usa fetch).
+      js/core/     -> configuración, cliente HTTP, estado y enrutador.
+      js/components, js/utils -> piezas reutilizables y seguridad (escape XSS).
+      ==========================================================================
+    -->
+    <script src="js/boot.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+    <!-- Aviso de conexión con la base de datos -->
+    <div id="banner-bd" class="banner-bd" hidden>
+        <i class="fa-solid fa-database"></i>
+        <div><strong>Sin conexión con SQL Server.</strong> <span id="banner-bd-texto">Reintentando…</span></div>
+        <button type="button" class="btn btn-sm btn-ghost-light" data-action="reintentar-bd"><i class="fa-solid fa-rotate"></i> Reintentar</button>
+    </div>
+
+    <!-- ===================== LOGIN ===================== -->
+    <section id="pantalla-login" class="login" hidden>
+        <div class="login-arte">
+            <img src="assets/img/arepa-grande.jpg" alt="Arepas de choclo con queso" class="login-foto">
+            <div class="login-arte-overlay"></div>
+            <div class="granos" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="login-marca">
+                <img src="assets/img/logo.png" alt="Logo La Exquisita" class="login-logo">
+                <h1>La Exquisita</h1>
+                <p>Arepas de choclo artesanales · Sistema POS & ERP</p>
+            </div>
+        </div>
+        <div class="login-panel">
+            <form id="form-login" class="login-card" novalidate autocomplete="on">
+                <img src="assets/img/logo.png" alt="" class="login-logo-mini">
+                <h2>¡Bienvenido de nuevo!</h2>
+                <p class="texto-suave">Ingresa con tu correo y contraseña.</p>
+                <label class="campo">
+                    <span>Correo</span>
+                    <div class="input-icono"><i class="fa-solid fa-envelope"></i>
+                        <input type="email" name="correo" required maxlength="100" autocomplete="username" placeholder="tu@correo.com">
+                    </div>
+                </label>
+                <label class="campo">
+                    <span>Contraseña</span>
+                    <div class="input-icono"><i class="fa-solid fa-lock"></i>
+                        <input type="password" name="password" required maxlength="128" autocomplete="current-password" placeholder="••••••••">
+                        <button type="button" class="ver-password" data-action="ver-password" aria-label="Mostrar contraseña"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                </label>
+                <p class="form-error" role="alert" hidden></p>
+                <button type="submit" class="btn btn-primary btn-block btn-lg"><i class="fa-solid fa-right-to-bracket"></i> Ingresar</button>
+                <p class="login-seguridad"><i class="fa-solid fa-shield-halved"></i> Sesión protegida · contraseñas cifradas con bcrypt · bloqueo tras 5 intentos</p>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===================== APLICACIÓN ===================== -->
+    <div id="app" hidden>
+        <header class="topbar">
+            <a class="marca" href="#/inicio" aria-label="Ir al inicio">
+                <img src="assets/img/logo.png" alt="Logo La Exquisita" class="marca-logo">
+                <span class="marca-texto">
+                    <strong>La Exquisita</strong>
+                    <small>POS & ERP · Arepas de choclo</small>
+                </span>
+            </a>
+
+            <!-- Barra superior: solo módulos que NO están como tarjeta en Inicio -->
+            <nav class="topnav" aria-label="Navegación principal">
+                <a href="#/inicio" data-ruta="inicio"><i class="fa-solid fa-house"></i><span>Inicio</span></a>
+                <a href="#/ventas" data-ruta="ventas" data-roles="administrador,cajero"><i class="fa-solid fa-chart-line"></i><span>Ventas</span></a>
+                <a href="#/asistente" data-ruta="asistente"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Asistente IA</span></a>
+            </nav>
+
+            <div class="usuario-menu">
+                <button type="button" class="usuario-chip" data-action="menu-usuario" aria-haspopup="true" aria-expanded="false">
+                    <span class="avatar" id="usuario-avatar">?</span>
+                    <span class="usuario-datos"><strong id="usuario-nombre">Usuario</strong><small id="usuario-rol">rol</small></span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="usuario-dropdown" id="usuario-dropdown" hidden>
+                    <button type="button" data-action="cambiar-password"><i class="fa-solid fa-key"></i> Cambiar contraseña</button>
+                    <button type="button" data-action="logout" class="peligro"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="contenedor">
+
+            <!-- ============ 1. INICIO ============ -->
+            <section id="vista-inicio" class="vista" data-vista="inicio" hidden>
+                <div class="hero">
+                    <div class="granos" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    <div class="hero-texto">
+                        <span class="pastilla"><span class="punto-vivo"></span> Conectado a SQL Server</span>
+                        <h1 id="hero-saludo">¡Hola!</h1>
+                        <p id="hero-fecha" class="hero-fecha"></p>
+                        <p class="hero-sub">Control de mostrador, clientes, inventario de insumos, mermas e inteligencia artificial en un solo lugar.</p>
+                        <div class="hero-acciones">
+                            <a href="#/pos" class="btn btn-maiz btn-lg" data-roles="administrador,cajero"><i class="fa-solid fa-cash-register"></i> Nueva venta</a>
+                            <a href="#/asistente" class="btn btn-ghost-light btn-lg"><i class="fa-solid fa-wand-magic-sparkles"></i> Preguntar a la IA</a>
+                        </div>
+                    </div>
+                    <img src="assets/img/logo.png" alt="" class="hero-logo" aria-hidden="true">
+                </div>
+
+                <div class="modulos">
+                    <a href="#/pos" class="modulo modulo-pos" data-roles="administrador,cajero">
+                        <span class="modulo-icono"><i class="fa-solid fa-cash-register"></i></span>
+                        <h3>Venta Rápida POS</h3>
+                        <p>Vende por paquete o por unidad, con cliente y descuento automático de stock.</p>
+                        <span class="modulo-ir">Abrir caja <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a href="#/clientes" class="modulo modulo-clientes" data-roles="administrador,cajero">
+                        <span class="modulo-icono"><i class="fa-solid fa-users"></i></span>
+                        <h3>Clientes</h3>
+                        <p>Directorio con rangos automáticos según el volumen de compras.</p>
+                        <span class="modulo-ir">Ver clientes <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a href="#/insumos" class="modulo modulo-insumos">
+                        <span class="modulo-icono"><i class="fa-solid fa-boxes-stacked"></i></span>
+                        <h3>Insumos y Stock</h3>
+                        <p>Existencias de materia prima, entradas y kardex de movimientos.</p>
+                        <span class="modulo-ir">Ver stock <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                    <a href="#/mermas" class="modulo modulo-mermas">
+                        <span class="modulo-icono"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                        <h3>Control de Mermas</h3>
+                        <p>Registro de pérdidas que descuenta el inventario al instante.</p>
+                        <span class="modulo-ir">Ver mermas <i class="fa-solid fa-arrow-right"></i></span>
+                    </a>
+                </div>
+
+                <h2 class="titulo-seccion"><i class="fa-solid fa-heart-pulse"></i> Pulso del negocio</h2>
+                <div class="kpis">
+                    <div class="kpi kpi-tostado">
+                        <span class="kpi-icono"><i class="fa-solid fa-receipt"></i></span>
+                        <div><small>Vendido hoy</small><strong data-kpi="total_hoy" data-formato="dinero">$0</strong><span class="kpi-pie"><b data-kpi="ventas_hoy">0</b> ventas</span></div>
+                    </div>
+                    <div class="kpi kpi-maiz">
+                        <span class="kpi-icono"><i class="fa-solid fa-sack-dollar"></i></span>
+                        <div><small>Últimos 30 días</small><strong data-kpi="total_mes" data-formato="dinero">$0</strong><span class="kpi-pie">Ticket prom. <b data-kpi="ticket_promedio_mes" data-formato="dinero">$0</b></span></div>
+                    </div>
+                    <div class="kpi kpi-hoja">
+                        <span class="kpi-icono"><i class="fa-solid fa-user-group"></i></span>
+                        <div><small>Clientes activos</small><strong data-kpi="clientes">0</strong><span class="kpi-pie"><b data-kpi="clientes_nuevos_30_dias">0</b> nuevos en 30 días</span></div>
+                    </div>
+                    <div class="kpi kpi-brasa">
+                        <span class="kpi-icono"><i class="fa-solid fa-bell"></i></span>
+                        <div><small>Insumos en alerta</small><strong data-kpi="insumos_en_alerta">0</strong><span class="kpi-pie"><b data-kpi="mermas_30_dias">0</b> mermas en 30 días</span></div>
+                    </div>
+                </div>
+
+                <div class="panel-grid">
+                    <div class="card">
+                        <div class="card-titulo"><h3><i class="fa-solid fa-chart-column"></i> Ventas de los últimos 7 días</h3></div>
+                        <div id="grafico-ventas" class="grafico" role="img" aria-label="Ventas por día de los últimos 7 días"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-titulo"><h3><i class="fa-solid fa-fire-burner"></i> Producción disponible</h3></div>
+                        <div id="panel-disponibilidad" class="lista-compacta"></div>
+                        <div class="card-titulo mt"><h3><i class="fa-solid fa-bell"></i> Alertas de stock</h3></div>
+                        <div id="panel-alertas" class="lista-compacta"></div>
+                    </div>
+                    <div class="card" data-roles="administrador,cajero">
+                        <div class="card-titulo"><h3><i class="fa-solid fa-clock-rotate-left"></i> Últimas ventas</h3><a href="#/ventas" class="enlace">Ver todo</a></div>
+                        <div id="panel-ultimas" class="lista-compacta"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 2. POS ============ -->
+            <section id="vista-pos" class="vista" data-vista="pos" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Terminal de Venta POS</h2>
+                        <p>1. Elige el cliente · 2. Agrega paquetes o unidades · 3. Confirma la venta.</p>
+                    </div>
+                </div>
+
+                <div class="pos-grid">
+                    <div class="pos-izquierda">
+                        <div class="card paso">
+                            <div class="paso-titulo"><span class="paso-numero">1</span><h3>Cliente de la venta</h3></div>
+                            <div class="picker" id="cliente-picker">
+                                <div class="picker-barra" id="picker-barra">
+                                    <div class="input-icono flex-1"><i class="fa-solid fa-magnifying-glass"></i>
+                                        <input type="search" id="cliente-buscar" placeholder="Buscar por nombre, cédula/NIT o teléfono…" autocomplete="off" maxlength="100" aria-label="Buscar cliente">
+                                    </div>
+                                    <button type="button" class="btn btn-maiz" data-action="nuevo-cliente-pos"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</button>
+                                </div>
+                                <ul class="picker-resultados" id="picker-resultados" role="listbox" hidden></ul>
+                                <div class="cliente-seleccionado" id="cliente-seleccionado" hidden></div>
+                            </div>
+                        </div>
+
+                        <div class="paso-titulo fuera"><span class="paso-numero">2</span><h3>Productos</h3><small class="texto-suave">Se vende por paquete (x10) o por unidad</small></div>
+                        <div id="pos-productos" class="productos-grid"></div>
+                    </div>
+
+                    <aside class="card carrito" aria-label="Orden actual">
+                        <div class="paso-titulo"><span class="paso-numero">3</span><h3>Orden actual</h3><span id="carrito-contador" class="contador">0</span></div>
+                        <div id="carrito-items" class="carrito-items"></div>
+                        <div class="carrito-pie">
+                            <span class="etiqueta-campo">Método de pago</span>
+                            <div class="chips" id="metodos-pago" role="radiogroup" aria-label="Método de pago">
+                                <button type="button" class="chip activo" data-metodo="efectivo"><i class="fa-solid fa-money-bill-wave"></i> Efectivo</button>
+                                <button type="button" class="chip" data-metodo="nequi"><i class="fa-solid fa-mobile-screen"></i> Nequi</button>
+                                <button type="button" class="chip" data-metodo="daviplata"><i class="fa-solid fa-mobile-retro"></i> Daviplata</button>
+                                <button type="button" class="chip" data-metodo="tarjeta"><i class="fa-solid fa-credit-card"></i> Tarjeta</button>
+                                <button type="button" class="chip" data-metodo="transferencia"><i class="fa-solid fa-building-columns"></i> Transferencia</button>
+                            </div>
+                            <div class="carrito-resumen">
+                                <div><span>Arepas en la orden</span><strong id="carrito-arepas">0</strong></div>
+                                <div class="total"><span>Total a pagar</span><strong id="carrito-total">$0</strong></div>
+                            </div>
+                            <p id="carrito-aviso" class="aviso" hidden></p>
+                            <button type="button" id="btn-confirmar-venta" class="btn btn-hoja btn-block btn-lg" disabled>
+                                <i class="fa-solid fa-circle-check"></i> Confirmar venta
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-block btn-sm" data-action="vaciar-carrito"><i class="fa-solid fa-trash-can"></i> Vaciar orden</button>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- ============ 3. CLIENTES ============ -->
+            <section id="vista-clientes" class="vista" data-vista="clientes" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Clientes</h2>
+                        <p>Rangos automáticos: Nuevo → Regular → Frecuente ($100.000+) → VIP ($200.000+).</p>
+                    </div>
+                    <button type="button" class="btn btn-maiz ml-auto" data-action="nuevo-cliente"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</button>
+                </div>
+                <div class="chips-resumen" id="clientes-resumen"></div>
+                <div class="card">
+                    <div class="barra-herramientas">
+                        <div class="input-icono flex-1"><i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="search" id="clientes-buscar" placeholder="Buscar por nombre, documento o teléfono…" maxlength="100" aria-label="Buscar clientes">
+                        </div>
+                    </div>
+                    <div class="tabla-scroll">
+                        <table class="tabla">
+                            <thead><tr><th>Cliente</th><th>Contacto</th><th>Tipo</th><th class="num">Compras</th><th class="num">Acumulado</th><th>Rango</th><th></th></tr></thead>
+                            <tbody id="tabla-clientes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 4. INSUMOS Y STOCK ============ -->
+            <section id="vista-insumos" class="vista" data-vista="insumos" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Insumos y Stock</h2>
+                        <p>Las ventas descuentan según la receta; las entradas y mermas quedan en el kardex.</p>
+                    </div>
+                    <button type="button" class="btn btn-hoja ml-auto" data-action="nuevo-insumo" data-roles="administrador,cocina"><i class="fa-solid fa-plus"></i> Nuevo insumo</button>
+                </div>
+                <div id="insumos-grid" class="insumos-grid"></div>
+                <div class="card">
+                    <div class="card-titulo"><h3><i class="fa-solid fa-list-check"></i> Kardex · últimos movimientos</h3>
+                        <select id="kardex-filtro" class="select-sm" aria-label="Filtrar por insumo"><option value="">Todos los insumos</option></select>
+                    </div>
+                    <div class="tabla-scroll">
+                        <table class="tabla">
+                            <thead><tr><th>Fecha</th><th>Insumo</th><th>Tipo</th><th class="num">Cantidad</th><th class="num">Stock final</th><th>Referencia</th><th>Usuario</th></tr></thead>
+                            <tbody id="tabla-kardex"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 5. MERMAS ============ -->
+            <section id="vista-mermas" class="vista" data-vista="mermas" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Control de Mermas</h2>
+                        <p>Cada merma descuenta el insumo del inventario en la misma transacción.</p>
+                    </div>
+                    <button type="button" class="btn btn-brasa ml-auto" data-action="nueva-merma" data-roles="administrador,cocina"><i class="fa-solid fa-plus"></i> Registrar merma</button>
+                </div>
+                <div class="chips-resumen" id="mermas-resumen"></div>
+                <div class="card">
+                    <div class="tabla-scroll">
+                        <table class="tabla">
+                            <thead><tr><th>#</th><th>Fecha</th><th>Insumo</th><th class="num">Cantidad</th><th>Motivo</th><th>Registró</th></tr></thead>
+                            <tbody id="tabla-mermas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 6. HISTORIAL DE VENTAS ============ -->
+            <section id="vista-ventas" class="vista" data-vista="ventas" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Historial de Ventas</h2>
+                        <p>Cada venta con su cliente, vendedor, productos y método de pago.</p>
+                    </div>
+                    <a href="#/pos" class="btn btn-primary ml-auto"><i class="fa-solid fa-cash-register"></i> Nueva venta</a>
+                </div>
+                <div class="card">
+                    <div class="barra-herramientas">
+                        <div class="chips" id="ventas-rangos">
+                            <button type="button" class="chip activo" data-rango="hoy">Hoy</button>
+                            <button type="button" class="chip" data-rango="7">7 días</button>
+                            <button type="button" class="chip" data-rango="30">30 días</button>
+                            <button type="button" class="chip" data-rango="todo">Todo</button>
+                        </div>
+                        <div class="rango-fechas">
+                            <label>Desde <input type="date" id="ventas-desde"></label>
+                            <label>Hasta <input type="date" id="ventas-hasta"></label>
+                        </div>
+                    </div>
+                    <div class="totales-ventas">
+                        <div><small>Ventas</small><strong id="ventas-cantidad">0</strong></div>
+                        <div><small>Total facturado</small><strong id="ventas-total">$0</strong></div>
+                        <div><small>Ticket promedio</small><strong id="ventas-ticket">$0</strong></div>
+                    </div>
+                    <div class="tabla-scroll">
+                        <table class="tabla tabla-clic">
+                            <thead><tr><th># Venta</th><th>Fecha</th><th>Cliente</th><th>Productos</th><th>Pago</th><th>Vendedor</th><th class="num">Total</th></tr></thead>
+                            <tbody id="tabla-ventas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ 7. ASISTENTE IA ============ -->
+            <section id="vista-asistente" class="vista" data-vista="asistente" hidden>
+                <div class="vista-header">
+                    <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
+                    <div>
+                        <h2>Asistente IA</h2>
+                        <p>Consulta en vivo la base de datos: stock, ventas, capacidad, clientes y mermas.</p>
+                    </div>
+                    <span class="pastilla pastilla-morado ml-auto" id="ia-modo"><i class="fa-solid fa-microchip"></i> Conectado a SQL Server</span>
+                </div>
+                <div class="card chat">
+                    <div id="chat-mensajes" class="chat-mensajes" aria-live="polite"></div>
+                    <div class="chat-sugerencias" id="chat-sugerencias">
+                        <button type="button" class="chip">¿Cuánto vendimos hoy?</button>
+                        <button type="button" class="chip">¿Cuánto maíz hay?</button>
+                        <button type="button" class="chip">¿Cuántos paquetes grandes puedo hacer?</button>
+                        <button type="button" class="chip">¿Qué debo comprar?</button>
+                        <button type="button" class="chip">¿Cuál es el producto más vendido?</button>
+                        <button type="button" class="chip">Mermas del mes</button>
+                        <button type="button" class="chip">Resumen general</button>
+                    </div>
+                    <form id="form-chat" class="chat-form" autocomplete="off">
+                        <input type="text" id="chat-input" maxlength="1000" placeholder="Escribe tu pregunta… ej: ¿cuántas arepas pequeñas se vendieron esta semana?" aria-label="Pregunta para el asistente" required>
+                        <button type="submit" class="btn btn-morado"><i class="fa-solid fa-paper-plane"></i><span> Preguntar</span></button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <footer class="pie">La Exquisita · POS & ERP · Ingeniería de Software UMB · Datos en vivo desde SQL Server</footer>
+    </div>
+
+    <!-- ===================== MODALES ===================== -->
+
+    <!-- Cliente (crear / editar) -->
+    <div class="modal" id="modal-cliente" role="dialog" aria-modal="true" aria-labelledby="modal-cliente-titulo" hidden>
+        <form class="modal-caja" id="form-cliente" novalidate>
+            <header class="modal-header"><h3 id="modal-cliente-titulo"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo form-grid">
+                <label class="campo col-2"><span>Nombre completo o razón social *</span><input name="nombre" required minlength="3" maxlength="100" placeholder="Ej: Tienda Don Pepe"></label>
+                <label class="campo"><span>Tipo</span>
+                    <select name="tipo_cliente"><option value="persona">Persona</option><option value="negocio">Negocio / tienda</option></select>
+                </label>
+                <label class="campo"><span>Cédula / NIT</span><input name="documento" maxlength="20" placeholder="Opcional (único)"></label>
+                <label class="campo"><span>Teléfono / celular</span><input name="telefono" type="tel" maxlength="20" placeholder="3001234567"></label>
+                <label class="campo"><span>Correo</span><input name="correo" type="email" maxlength="100" placeholder="cliente@correo.com"></label>
+                <label class="campo col-2"><span>Dirección</span><input name="direccion" maxlength="150" placeholder="Opcional"></label>
+                <p class="form-error col-2" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-maiz"><i class="fa-solid fa-floppy-disk"></i> Guardar cliente</button></footer>
+        </form>
+    </div>
+
+    <!-- Detalle de cliente -->
+    <div class="modal" id="modal-cliente-detalle" role="dialog" aria-modal="true" hidden>
+        <div class="modal-caja">
+            <header class="modal-header"><h3><i class="fa-solid fa-id-card"></i> Detalle del cliente</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo" id="cliente-detalle-cuerpo"></div>
+        </div>
+    </div>
+
+    <!-- Insumo (crear / editar) -->
+    <div class="modal" id="modal-insumo" role="dialog" aria-modal="true" hidden>
+        <form class="modal-caja" id="form-insumo" novalidate>
+            <header class="modal-header"><h3 id="modal-insumo-titulo"><i class="fa-solid fa-box"></i> Nuevo insumo</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo form-grid">
+                <label class="campo col-2"><span>Nombre *</span><input name="nombre" required minlength="2" maxlength="100" placeholder="Ej: Maíz Choclo"></label>
+                <label class="campo"><span>Unidad de medida *</span>
+                    <select name="unidad_medida">
+                        <option value="kg">Kg</option><option value="g">g</option><option value="litros">Litros</option><option value="ml">ml</option>
+                        <option value="libra">Libra</option><option value="unidad">Unidad</option><option value="paquete">Paquete</option>
+                    </select>
+                </label>
+                <label class="campo"><span>Stock mínimo *</span><input name="stock_minimo" type="number" min="0" step="0.001" required value="0"></label>
+                <label class="campo col-2" data-solo-crear><span>Stock inicial</span><input name="stock_actual" type="number" min="0" step="0.001" value="0"></label>
+                <p class="form-error col-2" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-hoja"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></footer>
+        </form>
+    </div>
+
+    <!-- Entrada de stock -->
+    <div class="modal" id="modal-entrada" role="dialog" aria-modal="true" hidden>
+        <form class="modal-caja modal-sm" id="form-entrada" novalidate>
+            <header class="modal-header"><h3><i class="fa-solid fa-truck-ramp-box"></i> Entrada de stock</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo">
+                <p class="texto-suave" id="entrada-insumo"></p>
+                <label class="campo"><span>Cantidad que ingresa *</span><input name="cantidad" type="number" min="0.001" step="0.001" required></label>
+                <label class="campo"><span>Nota</span><input name="nota" maxlength="80" placeholder="Ej: Compra al proveedor"></label>
+                <p class="form-error" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-hoja"><i class="fa-solid fa-plus"></i> Sumar al stock</button></footer>
+        </form>
+    </div>
+
+    <!-- Merma -->
+    <div class="modal" id="modal-merma" role="dialog" aria-modal="true" hidden>
+        <form class="modal-caja" id="form-merma" novalidate>
+            <header class="modal-header"><h3><i class="fa-solid fa-triangle-exclamation"></i> Registrar merma</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo form-grid">
+                <label class="campo col-2"><span>Insumo afectado *</span><select name="id_insumo" id="merma-insumo" required></select></label>
+                <label class="campo"><span>Cantidad perdida *</span><input name="cantidad" type="number" min="0.001" step="0.001" required><small class="ayuda" id="merma-disponible"></small></label>
+                <label class="campo"><span>Motivo *</span><select name="motivo" id="merma-motivo" required></select></label>
+                <label class="campo col-2"><span>Observación</span><input name="observacion" maxlength="255" placeholder="Detalle opcional"></label>
+                <p class="form-error col-2" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-brasa"><i class="fa-solid fa-floppy-disk"></i> Registrar y descontar</button></footer>
+        </form>
+    </div>
+
+    <!-- Cambio de contraseña -->
+    <div class="modal" id="modal-password" role="dialog" aria-modal="true" hidden>
+        <form class="modal-caja modal-sm" id="form-password" novalidate>
+            <header class="modal-header"><h3><i class="fa-solid fa-key"></i> Cambiar contraseña</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo">
+                <p class="aviso aviso-maiz" id="password-obligatorio" hidden><i class="fa-solid fa-shield-halved"></i> Por seguridad debes cambiar la contraseña temporal antes de continuar.</p>
+                <label class="campo"><span>Contraseña actual</span><input name="actual" type="password" required autocomplete="current-password"></label>
+                <label class="campo"><span>Nueva contraseña</span><input name="nueva" type="password" required minlength="8" autocomplete="new-password"><small class="ayuda">Mínimo 8 caracteres, con letras y números.</small></label>
+                <label class="campo"><span>Repite la nueva contraseña</span><input name="confirmar" type="password" required minlength="8" autocomplete="new-password"></label>
+                <p class="form-error" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Actualizar</button></footer>
+        </form>
+    </div>
+
+    <!-- Recibo de venta -->
+    <div class="modal" id="modal-recibo" role="dialog" aria-modal="true" hidden>
+        <div class="modal-caja modal-sm">
+            <div class="recibo" id="recibo-cuerpo"></div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-action="imprimir-recibo"><i class="fa-solid fa-print"></i> Imprimir</button><button type="button" class="btn btn-hoja" data-cerrar><i class="fa-solid fa-plus"></i> Nueva venta</button></footer>
+        </div>
+    </div>
+
+    <!-- Detalle de venta -->
+    <div class="modal" id="modal-venta" role="dialog" aria-modal="true" hidden>
+        <div class="modal-caja modal-sm">
+            <header class="modal-header"><h3><i class="fa-solid fa-receipt"></i> Detalle de venta</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo"><div class="recibo" id="venta-detalle-cuerpo"></div></div>
+        </div>
+    </div>
+
+    <!-- Confirmación genérica -->
+    <div class="modal" id="modal-confirmar" role="alertdialog" aria-modal="true" hidden>
+        <div class="modal-caja modal-sm">
+            <div class="modal-cuerpo confirmar">
+                <span class="confirmar-icono"><i class="fa-solid fa-circle-question"></i></span>
+                <p id="confirmar-texto"></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-respuesta="no">Cancelar</button><button type="button" class="btn btn-brasa" data-respuesta="si">Sí, continuar</button></footer>
+        </div>
+    </div>
+
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
