@@ -169,6 +169,14 @@
                     </div>
                 </div>
 
+                <div class="card pronostico" id="panel-pronostico">
+                    <div class="card-titulo">
+                        <h3><i class="fa-solid fa-brain"></i> Producción sugerida para mañana · Red neuronal</h3>
+                        <button type="button" class="btn btn-sm btn-ghost" data-action="reentrenar" data-roles="administrador"><i class="fa-solid fa-rotate"></i> Reentrenar</button>
+                    </div>
+                    <div id="pronostico-cuerpo" class="pronostico-cuerpo"><div class="esqueleto esqueleto-bloque"></div></div>
+                </div>
+
                 <div class="panel-grid">
                     <div class="card">
                         <div class="card-titulo"><h3><i class="fa-solid fa-chart-column"></i> Ventas de los últimos 7 días</h3></div>
@@ -221,12 +229,16 @@
                         <div class="paso-titulo"><span class="paso-numero">3</span><h3>Orden actual</h3><span id="carrito-contador" class="contador">0</span></div>
                         <div id="carrito-items" class="carrito-items"></div>
                         <div class="carrito-pie">
+                            <span class="etiqueta-campo">Estado de la venta</span>
+                            <div class="segmentado" id="estado-venta" data-modo="paquete" role="radiogroup" aria-label="Estado de la venta">
+                                <span class="pildora"></span>
+                                <button type="button" class="activo" data-estado="completada"><i class="fa-solid fa-circle-check"></i> Pagada ahora</button>
+                                <button type="button" data-estado="pendiente"><i class="fa-solid fa-clock"></i> Pendiente</button>
+                            </div>
+                            <input type="text" id="venta-observacion" maxlength="255" placeholder="Nota del pedido (ej: recoge a las 5 p. m.)" hidden>
                             <span class="etiqueta-campo">Método de pago</span>
                             <div class="chips" id="metodos-pago" role="radiogroup" aria-label="Método de pago">
                                 <button type="button" class="chip activo" data-metodo="efectivo"><i class="fa-solid fa-money-bill-wave"></i> Efectivo</button>
-                                <button type="button" class="chip" data-metodo="nequi"><i class="fa-solid fa-mobile-screen"></i> Nequi</button>
-                                <button type="button" class="chip" data-metodo="daviplata"><i class="fa-solid fa-mobile-retro"></i> Daviplata</button>
-                                <button type="button" class="chip" data-metodo="tarjeta"><i class="fa-solid fa-credit-card"></i> Tarjeta</button>
                                 <button type="button" class="chip" data-metodo="transferencia"><i class="fa-solid fa-building-columns"></i> Transferencia</button>
                             </div>
                             <div class="carrito-resumen">
@@ -320,7 +332,7 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Historial de Ventas</h2>
-                        <p>Cada venta con su cliente, vendedor, productos y método de pago.</p>
+                        <p>Estados: pendiente → completada → devuelta. Los totales son netos (sin pendientes y descontando reembolsos).</p>
                     </div>
                     <a href="#/pos" class="btn btn-primary ml-auto"><i class="fa-solid fa-cash-register"></i> Nueva venta</a>
                 </div>
@@ -332,6 +344,13 @@
                             <button type="button" class="chip" data-rango="30">30 días</button>
                             <button type="button" class="chip" data-rango="todo">Todo</button>
                         </div>
+                        <select id="ventas-estado" class="select-sm" aria-label="Filtrar por estado">
+                            <option value="">Todos los estados</option>
+                            <option value="completada">Completadas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="devuelta_parcial">Devueltas parcialmente</option>
+                            <option value="devuelta">Devueltas</option>
+                        </select>
                         <div class="rango-fechas">
                             <label>Desde <input type="date" id="ventas-desde"></label>
                             <label>Hasta <input type="date" id="ventas-hasta"></label>
@@ -341,10 +360,11 @@
                         <div><small>Ventas</small><strong id="ventas-cantidad">0</strong></div>
                         <div><small>Total facturado</small><strong id="ventas-total">$0</strong></div>
                         <div><small>Ticket promedio</small><strong id="ventas-ticket">$0</strong></div>
+                        <div><small>Pendiente por cobrar</small><strong id="ventas-por-cobrar">$0</strong></div>
                     </div>
                     <div class="tabla-scroll">
                         <table class="tabla tabla-clic">
-                            <thead><tr><th># Venta</th><th>Fecha</th><th>Cliente</th><th>Productos</th><th>Pago</th><th>Vendedor</th><th class="num">Total</th></tr></thead>
+                            <thead><tr><th># Venta</th><th>Fecha</th><th>Cliente</th><th>Productos</th><th>Pago</th><th>Estado</th><th>Vendedor</th><th class="num">Total neto</th></tr></thead>
                             <tbody id="tabla-ventas"></tbody>
                         </table>
                     </div>
@@ -364,12 +384,15 @@
                 <div class="card chat">
                     <div id="chat-mensajes" class="chat-mensajes" aria-live="polite"></div>
                     <div class="chat-sugerencias" id="chat-sugerencias">
+                        <button type="button" class="chip">¿Cuántas arepas preparo mañana?</button>
                         <button type="button" class="chip">¿Cuánto vendimos hoy?</button>
                         <button type="button" class="chip">¿Cuánto maíz hay?</button>
                         <button type="button" class="chip">¿Cuántos paquetes grandes puedo hacer?</button>
                         <button type="button" class="chip">¿Qué debo comprar?</button>
                         <button type="button" class="chip">¿Cuál es el producto más vendido?</button>
                         <button type="button" class="chip">Mermas del mes</button>
+                        <button type="button" class="chip">¿Hay ventas pendientes?</button>
+                        <button type="button" class="chip">Devoluciones del mes</button>
                         <button type="button" class="chip">Resumen general</button>
                     </div>
                     <form id="form-chat" class="chat-form" autocomplete="off">
@@ -490,6 +513,38 @@
             <header class="modal-header"><h3><i class="fa-solid fa-receipt"></i> Detalle de venta</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
             <div class="modal-cuerpo"><div class="recibo" id="venta-detalle-cuerpo"></div></div>
         </div>
+    </div>
+
+    <!-- Devolución de una venta -->
+    <div class="modal" id="modal-devolucion" role="dialog" aria-modal="true" hidden>
+        <form class="modal-caja" id="form-devolucion" novalidate>
+            <header class="modal-header"><h3><i class="fa-solid fa-rotate-left"></i> Registrar devolución</h3><button type="button" class="modal-cerrar" data-cerrar aria-label="Cerrar">&times;</button></header>
+            <div class="modal-cuerpo">
+                <p class="texto-suave" id="devolucion-venta"></p>
+                <span class="etiqueta-campo">¿Qué se devuelve?</span>
+                <div id="devolucion-items" class="devolucion-items"></div>
+                <div class="form-grid">
+                    <label class="campo"><span>Tipo de devolución *</span>
+                        <select name="tipo">
+                            <option value="producto_danado">Producto dañado</option>
+                            <option value="producto_equivocado">Producto equivocado</option>
+                            <option value="cliente_insatisfecho">Cliente insatisfecho</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </label>
+                    <div class="campo"><span>Qué se hace *</span>
+                        <div class="chips" id="devolucion-accion">
+                            <button type="button" class="chip activo" data-accion="reposicion"><i class="fa-solid fa-arrows-rotate"></i> Reponer producto</button>
+                            <button type="button" class="chip" data-accion="reembolso"><i class="fa-solid fa-money-bill-transfer"></i> Devolver dinero</button>
+                        </div>
+                    </div>
+                    <label class="campo col-2"><span>Motivo / detalle</span><input name="motivo" maxlength="255" placeholder="Ej: las arepas salieron quemadas"></label>
+                </div>
+                <p class="aviso aviso-maiz" id="devolucion-resumen"></p>
+                <p class="form-error" role="alert" hidden></p>
+            </div>
+            <footer class="modal-pie"><button type="button" class="btn btn-ghost" data-cerrar>Cancelar</button><button type="submit" class="btn btn-brasa"><i class="fa-solid fa-check"></i> Registrar devolución</button></footer>
+        </form>
     </div>
 
     <!-- Confirmación genérica -->

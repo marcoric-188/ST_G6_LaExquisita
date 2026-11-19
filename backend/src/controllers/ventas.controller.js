@@ -5,5 +5,7 @@ const { validarId } = require('../utils/validator');
 module.exports = {
     listar: async (req, res) => res.json({ success: true, data: await ventasService.listar(req.query) }),
     obtener: async (req, res) => res.json({ success: true, data: await ventasService.obtener(validarId(req.params.id)) }),
-    registrar: async (req, res) => res.status(201).json({ success: true, data: await ventasService.registrar(req.body, req.usuario), message: 'Venta registrada y stock descontado.' })
+    registrar: async (req, res) => res.status(201).json({ success: true, data: await ventasService.registrar(req.body, req.usuario), message: 'Venta registrada y stock descontado.' }),
+    completar: async (req, res) => res.json({ success: true, data: await ventasService.completar(validarId(req.params.id), req.body), message: 'Venta marcada como completada.' }),
+    devolver: async (req, res) => res.status(201).json({ success: true, data: await ventasService.devolver(validarId(req.params.id), req.body, req.usuario), message: 'Devolución registrada.' })
 };

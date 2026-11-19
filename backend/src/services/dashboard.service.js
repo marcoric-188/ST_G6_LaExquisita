@@ -6,6 +6,7 @@ const clientesRepo = require('../repositories/clientes.repository');
 const mermasRepo = require('../repositories/mermas.repository');
 const insumosService = require('./insumos.service');
 const productosService = require('./productos.service');
+const pronosticoService = require('./ia/pronostico.service');
 
 /** Suma paquetes, unidades sueltas y arepas por producto para un periodo. */
 function agruparPorProducto(filas, periodo) {
@@ -25,7 +26,7 @@ function agruparPorProducto(filas, periodo) {
 }
 
 async function resumen() {
-    const [periodos, serie, porProducto, insumos, clientes, ultimas, mermas, productos] = await Promise.all([
+    const [periodos, serie, porProducto, insumos, clientes, ultimas, mermas, productos, pronostico] = await Promise.all([
         ventasRepo.resumenPorPeriodo(),
         ventasRepo.serieDiaria(7),
         ventasRepo.productosPorPeriodo(),
@@ -33,7 +34,12 @@ async function resumen() {
         clientesRepo.estadisticas(),
         ventasRepo.listar({ limite: 6 }),
         mermasRepo.resumenPorInsumo(30),
-        productosService.listarConDisponibilidad()
+        productosService.listarConDisponibilidad(),
+        // Si la red neuronal falla, el panel igual carga
+        pronosticoService.pronosticar().catch((error) => {
+            console.error('Pronóstico IA:', error.message);
+            return { estado: 'error', mensaje: 'No se pudo calcular el pronóstico.' };
+        })
     ]);
 
     const hoy = periodos.hoy || { ventas: 0, total: 0 };
@@ -50,8 +56,11 @@ async function resumen() {
             clientes: clientes.total,
             clientes_nuevos_30_dias: clientes.nuevos_30_dias,
             insumos_en_alerta: alertas.length,
-            mermas_30_dias: mermas.reduce((acc, m) => acc + m.registros, 0)
+            mermas_30_dias: mermas.reduce((acc, m) => acc + m.registros, 0),
+            pendientes: (periodos.total || {}).pendientes || 0,
+            por_cobrar: (periodos.total || {}).por_cobrar || 0
         },
+        pronostico,
         serie_7_dias: serie,
         productos_hoy: agruparPorProducto(porProducto, 'hoy'),
         productos_mes: agruparPorProducto(porProducto, 'mes'),

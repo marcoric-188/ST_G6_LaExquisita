@@ -116,6 +116,9 @@ function detectarCliente(q, clientes) {
 const INTENCIONES = [
     // Las raíces terminan en \w* para aceptar variaciones: vend\w* -> vendimos, vendieron, vendido...
     ['ayuda', /\b(ayuda|que puedes|que sabes|que haces|como funciona|que te puedo preguntar|opciones)\b/],
+    ['pronostico', /\b(manana|pronostic\w*|predic\w*|prever|demanda|red neuronal|preparo|debo preparar|hay que preparar|cuanto voy a vender|estimad\w*)\b/],
+    ['pendientes', /\b(pendient\w*|por cobrar|fiad\w*|sin pagar|apartad\w*)\b/],
+    ['devoluciones', /\b(devoluc\w*|devuelt\w*|devolvi\w*|reembols\w*|reposic\w*)\b/],
     ['capacidad', /\b(alcanza\w*|puedo (hacer|producir|preparar|vender)|se pueden (hacer|producir|preparar)|producir|capacidad|cuant[ao]s? (paquetes|arepas) (puedo|se pueden|alcanzan|quedan|hay disponibles)|disponibles para vender)\b/],
     ['mermas', /\b(merma\w*|desperdici\w*|perdid\w*|danad\w*|dano\w*|quemad\w*|vencid\w*|botad\w*)\b/],
     ['compras', /\b(comprar|reabastec\w*|pedir al proveedor|hace falta comprar|que falta|que me falta|surtir|proveedor\w*|pedido de insumos)\b/],
@@ -184,6 +187,7 @@ function responderVentas(ctx, { periodo, tamano }) {
         const v = ctx.ventas[p];
         r.push(`• ${ETIQUETA_PERIODO[p][0].toUpperCase()}${ETIQUETA_PERIODO[p].slice(1)}: ${plural(v.ventas, 'venta', 'ventas')} · ${dinero(v.total)}`);
     }
+    if (ctx.ventas.total.pendientes) r.push(`• Pendientes por cobrar: ${plural(ctx.ventas.total.pendientes, 'venta', 'ventas')} · ${dinero(ctx.ventas.total.por_cobrar)}`);
     const ref = ctx.ventas.hoy.ventas ? 'hoy' : 'mes';
     let productos = ctx.ventas[ref].por_producto;
     if (tamano) productos = productos.filter(p => p.tamano === tamano);
@@ -342,14 +346,56 @@ function responderResumen(ctx) {
     ].join('\n');
 }
 
+const TEXTO_TIPO_DEV = {
+    producto_danado: 'producto dañado', producto_equivocado: 'producto equivocado',
+    cliente_insatisfecho: 'cliente insatisfecho', otro: 'otro motivo'
+};
+
+function responderPronostico(ctx, { tamano }) {
+    const p = ctx.pronostico;
+    if (!p || p.estado !== 'ok') {
+        const detalle = p && p.mensaje ? p.mensaje : 'La red neuronal aún no tiene un modelo entrenado.';
+        return `🔮 ${detalle}\nCuando haya más historial de ventas podrá pronosticar cuántas arepas preparar.`;
+    }
+    let productos = p.manana.productos;
+    if (tamano) productos = productos.filter(x => x.tamano === tamano);
+    const m = p.modelo.metricas || {};
+    const lineas = [
+        `🔮 Pronóstico de la red neuronal para mañana (${p.manana.dia_semana} ${p.manana.fecha}):`,
+        ...productos.map(x => `• ${x.nombre}: ${plural(x.unidades, 'arepa', 'arepas')} → preparar ${plural(x.paquetes, 'paquete', 'paquetes')}`),
+        `Total estimado: ${plural(p.manana.total_arepas, 'arepa', 'arepas')}.`
+    ];
+    if (p.alertas.length) lineas.push('', '⚠️ Insumos:', ...p.alertas.map(a => `• ${a}`));
+    else lineas.push('', '✅ El inventario actual alcanza para producir lo pronosticado.');
+    lineas.push('', `Modelo: ${p.modelo.arquitectura} · error medio ±${n(m.mae_unidades)} arepas por producto` +
+        (m.mejora_vs_promedio !== undefined ? ` (${n(m.mejora_vs_promedio)}% mejor que un promedio simple)` : '') + '.');
+    return lineas.join('\n');
+}
+
+function responderPendientes(ctx) {
+    const t = ctx.ventas.total;
+    if (!t.pendientes) return '✅ No hay ventas pendientes por cobrar.';
+    return `🕒 Hay ${plural(t.pendientes, 'venta pendiente', 'ventas pendientes')} por ${dinero(t.por_cobrar)}. ` +
+        'Se ven en Ventas → filtro "Pendientes", y se marcan como completadas al cobrarlas.';
+}
+
+function responderDevoluciones(ctx) {
+    const d = ctx.devoluciones_30_dias || [];
+    if (!d.length) return '✅ No hay devoluciones en los últimos 30 días.';
+    const total = d.reduce((a, x) => a + x.cantidad, 0);
+    const reembolsado = d.reduce((a, x) => a + x.reembolsado, 0);
+    return [`↩️ Devoluciones de los últimos 30 días: ${plural(total, 'registro', 'registros')}, reembolsado ${dinero(reembolsado)}.`,
+        ...d.map(x => `• ${TEXTO_TIPO_DEV[x.tipo] || x.tipo} · ${x.accion}: ${x.cantidad}` + (x.reembolsado ? ` (${dinero(x.reembolsado)})` : ''))].join('\n');
+}
+
 const AYUDA = [
     'Puedo responder con datos reales de la base de datos. Prueba con:',
     '• "¿Cuánto maíz hay?" o "¿Qué insumos están bajos?"',
-    '• "¿Cuántos paquetes grandes puedo hacer?"',
+    '• "¿Cuántos paquetes grandes puedo hacer?" · "¿Cuántas arepas preparo mañana?"',
     '• "¿Cuánto vendimos hoy?" / "ventas de la semana"',
     '• "¿Cuántas arepas pequeñas se vendieron este mes?"',
     '• "¿Cuál es el producto más vendido?"',
-    '• "¿Qué debo comprar?" · "mermas del mes" · "pagos por Nequi"',
+    '• "¿Qué debo comprar?" · "mermas del mes" · "pagos en efectivo y transferencia"',
     '• "¿Cuánto ha comprado Tienda Don Pepe?" · "resumen general"'
 ].join('\n');
 
@@ -386,6 +432,9 @@ function responder(mensaje, ctx, historial = []) {
         case 'saludo': return `¡Hola! 👋 Soy el asistente de La Exquisita y estoy conectado a la base de datos.\n\n${AYUDA}`;
         case 'gracias': return '¡Con gusto! Si necesitas otra cifra, aquí estoy. 🌽';
         case 'ayuda': return AYUDA;
+        case 'pronostico': return responderPronostico(ctx, entidades);
+        case 'pendientes': return responderPendientes(ctx);
+        case 'devoluciones': return responderDevoluciones(ctx);
         case 'capacidad': return responderCapacidad(ctx, entidades);
         case 'mermas': return responderMermas(ctx, entidades);
         case 'compras': return responderCompras(ctx);

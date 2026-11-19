@@ -14,7 +14,7 @@ let insumos = [];
 let editando = null;
 let entradaPara = null;
 
-const TIPOS = { entrada: 'Entrada', venta: 'Venta', merma: 'Merma', ajuste: 'Ajuste' };
+const TIPOS = { entrada: 'Entrada', venta: 'Venta', merma: 'Merma', ajuste: 'Ajuste', devolucion: 'Reposición' };
 
 function tarjeta(i, k) {
     // La barra llega al 100% con 3 veces el mínimo; la marca indica el mínimo.

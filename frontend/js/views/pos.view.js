@@ -22,6 +22,7 @@ let productos = [];
 const opciones = new Map();          // id_producto -> { modo, cantidad }
 let carrito = [];                    // { clave, id_producto, modalidad, cantidad }
 let metodoPago = 'efectivo';
+let estadoVenta = 'completada';     // completada | pendiente (por cobrar / por entregar)
 let picker = null;
 let ultimaClaveAgregada = null;
 
@@ -231,7 +232,8 @@ function mostrarRecibo(venta) {
     const arepas = venta.items.reduce((a, i) => a + i.unidades, 0);
     $('#recibo-cuerpo').innerHTML = html`
         <div class="recibo-check"><i class="fa-solid fa-check"></i></div>
-        <h3>¡Venta registrada!</h3>
+        <h3>${venta.estado === 'pendiente' ? 'Pedido pendiente registrado' : '¡Venta registrada!'}</h3>
+        ${venta.estado === 'pendiente' ? html`<p><span class="badge badge-pendiente"><i class="fa-solid fa-clock"></i> Pendiente por cobrar</span></p>` : ''}
         <p class="texto-suave">Venta #V-${String(venta.id_venta).padStart(4, '0')} · ${fechaHora(venta.fecha_hora)}</p>
         <table class="recibo-tabla">
             ${venta.items.map(i => html`<tr><td>${i.cantidad} × ${i.nombre}<br><small class="texto-suave">${numero(i.unidades)} arepas · ${dinero(i.precio_unitario)} c/u</small></td><td>${dinero(i.subtotal)}</td></tr>`)}
@@ -264,9 +266,13 @@ async function confirmarVenta() {
     const boton = $('#btn-confirmar-venta');
     cargando(boton, true);
     try {
-        const venta = await ventasService.registrar({ id_cliente: cliente.id_cliente, metodo_pago: metodoPago, items: carrito });
+        const venta = await ventasService.registrar({
+            id_cliente: cliente.id_cliente, metodo_pago: metodoPago, items: carrito,
+            estado: estadoVenta, observacion: $('#venta-observacion').value.trim()
+        });
         mostrarRecibo(venta);
         carrito = [];
+        cambiarEstado('completada');
         picker.limpiar();
         await cargarProductos();
     } catch (error) {
@@ -276,6 +282,19 @@ async function confirmarVenta() {
         cargando(boton, false);
         actualizarBotonConfirmar();
     }
+}
+
+function cambiarEstado(estado) {
+    estadoVenta = estado;
+    const seg = $('#estado-venta');
+    seg.dataset.modo = estado;
+    seg.querySelectorAll('[data-estado]').forEach(b => b.classList.toggle('activo', b.dataset.estado === estado));
+    const nota = $('#venta-observacion');
+    nota.hidden = estado !== 'pendiente';
+    if (estado !== 'pendiente') nota.value = '';
+    $('#btn-confirmar-venta').innerHTML = estado === 'pendiente'
+        ? '<i class="fa-solid fa-clock"></i> Registrar pedido pendiente'
+        : '<i class="fa-solid fa-circle-check"></i> Confirmar venta';
 }
 
 /* ------------------------------ Vista ------------------------------ */
@@ -327,6 +346,9 @@ export const posVista = {
                 c.setAttribute('aria-checked', String(c === chip));
             });
         });
+
+        on($('#estado-venta'), 'click', '[data-estado]', (e, b) => cambiarEstado(b.dataset.estado));
+        cambiarEstado('completada');
 
         $('[data-action="vaciar-carrito"]').addEventListener('click', () => {
             carrito = [];

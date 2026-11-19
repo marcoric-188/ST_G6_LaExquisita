@@ -5,7 +5,8 @@ import { $, $$, html } from '../utils/dom.js';
 import { dinero, numero, haceCuanto, METODOS_PAGO } from '../utils/format.js';
 import { estado } from '../core/store.js';
 import { dashboardService } from '../services/dashboard.service.js';
-import { animarNumero, vacio, toast } from '../components/ui.js';
+import { iaService } from '../services/ia.service.js';
+import { animarNumero, vacio, toast, cargando } from '../components/ui.js';
 
 const compacto = (v) => (v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : v >= 1000 ? `$${Math.round(v / 1000)}k` : dinero(v));
 
@@ -13,11 +14,14 @@ function saludo() {
     const h = new Date().getHours();
     const nombre = estado.usuario ? estado.usuario.nombre.split(' ')[0] : '';
     const texto = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
-    $('#hero-saludo').textContent = `${texto}, ${nombre} 👋`;
     const fecha = new Date().toLocaleString('es-CO', {
         weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
     });
-    $('#hero-fecha').textContent = fecha[0].toUpperCase() + fecha.slice(1);
+    // Si se quitan estos elementos del HTML, el panel sigue funcionando
+    const elSaludo = $('#hero-saludo');
+    const elFecha = $('#hero-fecha');
+    if (elSaludo) elSaludo.textContent = `${texto}, ${nombre} 👋`;
+    if (elFecha) elFecha.textContent = fecha[0].toUpperCase() + fecha.slice(1);
 }
 
 function pintarGrafico(serie) {
@@ -61,13 +65,67 @@ function pintarUltimas(ventas) {
         <div class="item-compacto">
             <span class="icono-redondo"><i class="fa-solid ${(METODOS_PAGO[v.metodo_pago] || METODOS_PAGO.efectivo).icono}"></i></span>
             <span class="info"><strong>${v.cliente || 'Sin cliente'}</strong><small>#${v.id_venta} · ${haceCuanto(v.fecha_hora)}</small></span>
-            <span class="valor">${dinero(v.total)}</span>
+            <span class="valor">${dinero(v.estado === 'pendiente' ? v.total : v.total_neto)}</span>
         </div>`)}` : vacio('fa-receipt', 'Aún no hay ventas registradas.');
+}
+
+const imagenProducto = (tamano) => (tamano === 'pequena' ? 'assets/img/arepa-pequena.jpg' : 'assets/img/arepa-grande.jpg');
+
+/** Tarjeta de la red neuronal: qué preparar mañana, los próximos 7 días y la calidad del modelo. */
+function pintarPronostico(p) {
+    const cuerpo = $('#pronostico-cuerpo');
+    if (!p || p.estado !== 'ok') {
+        cuerpo.innerHTML = html`<div class="pron-vacio"><i class="fa-solid fa-brain"></i>
+            <div><strong>La red neuronal todavía está aprendiendo.</strong><br>
+            ${p && p.mensaje ? p.mensaje : 'No se pudo calcular el pronóstico.'}
+            Necesita varias semanas de ventas registradas para pronosticar la demanda.</div></div>`;
+        return;
+    }
+    const m = p.modelo.metricas || {};
+    const max = Math.max(1, ...p.proximos_dias.map(d => d.total_arepas));
+    cuerpo.innerHTML = html`
+        <div class="pron-productos">
+            ${p.manana.productos.map(x => html`
+                <div class="pron-producto">
+                    <img src="${imagenProducto(x.tamano)}" alt="">
+                    <div class="info"><strong>${x.nombre}</strong><small>Mañana, ${p.manana.dia_semana}</small></div>
+                    <div class="cifra"><strong>${numero(x.unidades)}</strong><small>arepas · ${x.paquetes} paq.</small></div>
+                </div>`)}
+            ${p.alertas.length
+                ? html`<p class="aviso">${p.alertas.join(' ')}</p>`
+                : html`<p class="texto-suave" style="font-size:13px"><i class="fa-solid fa-circle-check" style="color:var(--hoja-600)"></i> El inventario alcanza para producir lo pronosticado.</p>`}
+        </div>
+        <div class="pron-semana" role="img" aria-label="Arepas pronosticadas para los próximos 7 días">
+            ${p.proximos_dias.map((d, i) => html`<div class="barra-col" title="${d.dia_semana}: ${d.total_arepas} arepas">
+                <div class="barra ${i === 0 ? 'manana' : ''}" style="height:${Math.max(6, (d.total_arepas / max) * 100)}%; animation-delay:${i * 70}ms">
+                    <span class="barra-valor">${d.total_arepas}</span>
+                </div>
+                <span class="barra-dia">${i === 0 ? 'mañana' : d.dia_semana.slice(0, 3)}</span>
+            </div>`)}
+        </div>
+        <div class="pron-meta">
+            <div class="dato"><small>Modelo</small><strong>${p.modelo.arquitectura}</strong></div>
+            <div class="dato"><small>Error medio (validación)</small><strong>±${numero(m.mae_unidades)} arepas</strong></div>
+            <div class="dato"><small>Frente a un promedio simple</small><strong>${m.mejora_vs_promedio >= 0 ? `${numero(m.mejora_vs_promedio)}% mejor` : `${numero(-m.mejora_vs_promedio)}% peor`}</strong></div>
+            <div class="dato"><small>Entrenado con</small><strong>${numero(p.modelo.muestras)} ejemplos · ${haceCuanto(p.modelo.fecha_entrenamiento)}</strong></div>
+        </div>`;
 }
 
 export const inicioVista = {
     iniciar() {
         setInterval(saludo, 30000);
+        const reentrenar = $('[data-action="reentrenar"]');
+        if (reentrenar) reentrenar.addEventListener('click', async () => {
+            cargando(reentrenar, true);
+            try {
+                const r = await iaService.entrenar();
+                if (r.estado === 'ok') toast(`Red neuronal reentrenada: error medio ±${numero(r.metricas.mae_unidades)} arepas.`, 'exito');
+                else toast(r.mensaje, 'info');
+                pintarPronostico(await iaService.pronostico());
+            } catch (error) {
+                toast(error.message, 'error');
+            } finally { cargando(reentrenar, false); }
+        });
     },
 
     async mostrar() {
@@ -78,10 +136,17 @@ export const inicioVista = {
                 const valor = d.kpis[el.dataset.kpi] || 0;
                 animarNumero(el, valor, el.dataset.formato === 'dinero' ? dinero : (v) => numero(Math.round(v)));
             });
-            pintarGrafico(d.serie_7_dias);
-            pintarDisponibilidad(d.disponibilidad);
-            pintarAlertas(d.insumos_alerta);
-            pintarUltimas(d.ultimas_ventas);
+            // Cada panel se pinta por separado: si uno falla, los demás igual se muestran
+            const paneles = [
+                () => pintarGrafico(d.serie_7_dias),
+                () => pintarDisponibilidad(d.disponibilidad),
+                () => pintarAlertas(d.insumos_alerta),
+                () => pintarUltimas(d.ultimas_ventas),
+                () => pintarPronostico(d.pronostico)
+            ];
+            paneles.forEach((pintar) => {
+                try { pintar(); } catch (e) { console.error('Panel de inicio:', e); }
+            });
         } catch (error) {
             if (error.status !== 401 && error.status !== 403) toast(error.message, 'error');
         }

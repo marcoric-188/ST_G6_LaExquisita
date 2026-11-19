@@ -46,9 +46,6 @@ export const capitalizar = (t) => (t ? t[0].toUpperCase() + t.slice(1) : '');
 
 export const METODOS_PAGO = {
     efectivo: { etiqueta: 'Efectivo', icono: 'fa-money-bill-wave' },
-    nequi: { etiqueta: 'Nequi', icono: 'fa-mobile-screen' },
-    daviplata: { etiqueta: 'Daviplata', icono: 'fa-mobile-retro' },
-    tarjeta: { etiqueta: 'Tarjeta', icono: 'fa-credit-card' },
     transferencia: { etiqueta: 'Transferencia', icono: 'fa-building-columns' }
 };
 
@@ -57,4 +54,18 @@ export const ESTADOS_STOCK = {
     bajo: { etiqueta: 'Bajo mínimo', icono: 'fa-triangle-exclamation' },
     critico: { etiqueta: 'Crítico', icono: 'fa-fire' },
     agotado: { etiqueta: 'Agotado', icono: 'fa-ban' }
+};
+
+export const ESTADOS_VENTA = {
+    completada: { etiqueta: 'Completada', icono: 'fa-circle-check' },
+    pendiente: { etiqueta: 'Pendiente', icono: 'fa-clock' },
+    devuelta_parcial: { etiqueta: 'Devuelta parcial', icono: 'fa-rotate-left' },
+    devuelta: { etiqueta: 'Devuelta', icono: 'fa-rotate-left' }
+};
+
+export const TIPOS_DEVOLUCION = {
+    producto_danado: 'Producto dañado',
+    producto_equivocado: 'Producto equivocado',
+    cliente_insatisfecho: 'Cliente insatisfecho',
+    otro: 'Otro'
 };

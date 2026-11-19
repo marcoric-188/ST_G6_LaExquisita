@@ -1,0 +1,30 @@
+Pruebas unitarias · La Exquisita · 2026-11-19 01:23
+Comando: npm test
+
+✔ devolución con reembolso: calcula el dinero y deja la venta parcialmente devuelta (1.517588ms)
+✔ devolución con reposición: no devuelve dinero (0.211247ms)
+✔ devolución total: si se reembolsa todo, la venta queda devuelta (0.141471ms)
+✔ devolución: no deja devolver más de lo vendido (ni de otra venta) (0.635178ms)
+✔ estado de la venta: solo se acepta pendiente o completada al registrar (1.007162ms)
+✔ reposición: calcula los insumos de las arepas nuevas según la receta (1.853003ms)
+✔ red neuronal: aprende una función (el error baja más de 100 veces) (221.469563ms)
+✔ red neuronal: el modelo guardado en JSON predice exactamente igual (2.125122ms)
+✔ red neuronal: con la misma semilla da siempre el mismo resultado (1.013651ms)
+✔ pronóstico: los días sin ventas cuentan como 0 y la serie es continua (0.662971ms)
+✔ pronóstico: variables de entrada (día de la semana, rezagos, promedios, producto) (0.426351ms)
+✔ pronóstico: arma ejemplos solo cuando hay 28 días de historia (0.448158ms)
+✔ validador: limpia texto, convierte números y rechaza datos inválidos (2.280061ms)
+✔ venta: precios salen de la BD (paquete y unidad) y se descuentan insumos por receta (0.430844ms)
+✔ venta: une líneas repetidas y exige cliente y productos (0.738264ms)
+✔ capacidad: el insumo que menos alcanza limita la producción (0.228064ms)
+✔ contraseñas: política mínima (0.445475ms)
+✔ IA local: responde cantidades exactas de la BD (5.346823ms)
+✔ IA local: entiende preguntas de seguimiento ("¿y ayer?") (0.378755ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 587.192854

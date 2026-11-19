@@ -79,7 +79,7 @@ const CONTEXTO = {
     ventas: Object.fromEntries(['hoy', 'ayer', 'semana', 'mes', 'total'].map(p => [p, {
         ventas: p === 'ayer' ? 0 : 2, total: p === 'ayer' ? 0 : 57500, ticket_promedio: 28750,
         por_producto: p === 'ayer' ? [] : [{ id_producto: 1, nombre: 'Paquete Arepa Grande (x10)', tamano: 'grande', paquetes: 2, unidades_sueltas: 5, arepas: 25, total: 57500 }],
-        metodos_pago: [{ metodo_pago: 'nequi', ventas: 2, total: 57500 }]
+        metodos_pago: [{ metodo_pago: 'transferencia', ventas: 2, total: 57500 }]
     }])),
     clientes: { estadisticas: { total: 1, nuevos_30_dias: 1, vip: 0, frecuentes: 0, regulares: 1, nuevos: 0 },
         lista: [{ id_cliente: 1, nombre: 'Tienda Don Pepe', tipo_cliente: 'negocio', rango: 'Regular', total_compras: 57500, numero_compras: 2, ultima_compra: null }] },

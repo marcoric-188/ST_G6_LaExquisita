@@ -23,6 +23,9 @@
      detalle_ventas ...... líneas (producto, modalidad, cantidad) de cada venta
      mermas .............. pérdidas de insumos
      movimientos_inventario  kardex: toda entrada/salida de insumos
+     devoluciones ........ devolución de una venta (tipo y acción) + su detalle
+     modelos_ia .......... red neuronal entrenada (pesos en JSON)
+     predicciones_demanda  pronóstico de arepas por día y producto
    ========================================================================== */
 SET NOCOUNT ON;
 SET ANSI_NULLS ON;
@@ -248,14 +251,24 @@ IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_ventas_clientes')
     ALTER TABLE dbo.ventas ADD CONSTRAINT FK_ventas_clientes
         FOREIGN KEY (id_cliente) REFERENCES dbo.clientes(id_cliente);
 GO
--- Método de pago: se normaliza y se amplía la lista (agrega Daviplata y transferencia)
+-- Método de pago: el negocio solo recibe EFECTIVO o TRANSFERENCIA (Nequi, Daviplata, bancos)
 IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_ventas_metodo_pago')
 BEGIN
     EXEC dbo.usp_eliminar_checks_columna @tabla = 'ventas', @columna = 'metodo_pago';
     UPDATE dbo.ventas SET metodo_pago = LOWER(LTRIM(RTRIM(metodo_pago))) WHERE metodo_pago IS NOT NULL;
     UPDATE dbo.ventas SET metodo_pago = 'efectivo' WHERE metodo_pago IS NULL;
+    UPDATE dbo.ventas SET metodo_pago = 'transferencia' WHERE metodo_pago NOT IN ('efectivo', 'transferencia');
     ALTER TABLE dbo.ventas WITH NOCHECK ADD CONSTRAINT CK_ventas_metodo_pago
-        CHECK (metodo_pago IN ('efectivo', 'nequi', 'daviplata', 'tarjeta', 'transferencia'));
+        CHECK (metodo_pago IN ('efectivo', 'transferencia'));
+END
+GO
+-- Versión 4: bases que ya tenían la lista larga (nequi, daviplata, tarjeta) pasan a transferencia
+IF EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_ventas_metodo_pago' AND definition LIKE '%nequi%')
+BEGIN
+    ALTER TABLE dbo.ventas DROP CONSTRAINT CK_ventas_metodo_pago;
+    UPDATE dbo.ventas SET metodo_pago = 'transferencia' WHERE metodo_pago NOT IN ('efectivo', 'transferencia');
+    ALTER TABLE dbo.ventas WITH NOCHECK ADD CONSTRAINT CK_ventas_metodo_pago
+        CHECK (metodo_pago IN ('efectivo', 'transferencia'));
 END
 GO
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ventas_fecha' AND object_id = OBJECT_ID('dbo.ventas'))
@@ -345,7 +358,7 @@ CREATE TABLE dbo.movimientos_inventario (
     id_movimiento    INT IDENTITY(1,1) CONSTRAINT PK_movimientos PRIMARY KEY,
     id_insumo        INT           NOT NULL,
     tipo             VARCHAR(20)   NOT NULL
-                     CONSTRAINT CK_movimientos_tipo CHECK (tipo IN ('entrada', 'venta', 'merma', 'ajuste')),
+                     CONSTRAINT CK_movimientos_tipo CHECK (tipo IN ('entrada', 'venta', 'merma', 'ajuste', 'devolucion')),
     cantidad         DECIMAL(12,3) NOT NULL,
     stock_resultante DECIMAL(12,3) NOT NULL,
     referencia       VARCHAR(100)  NULL,
@@ -359,8 +372,120 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_movimientos_insumo_fec
     CREATE INDEX IX_movimientos_insumo_fecha ON dbo.movimientos_inventario(id_insumo, fecha_hora);
 GO
 
+-- Versión 3: se agrega el tipo 'devolucion' (reposición de producto dañado)
+IF EXISTS (SELECT 1 FROM sys.check_constraints
+           WHERE parent_object_id = OBJECT_ID('dbo.movimientos_inventario')
+             AND definition LIKE '%tipo%' AND definition NOT LIKE '%devolucion%')
+BEGIN
+    EXEC dbo.usp_eliminar_checks_columna @tabla = 'movimientos_inventario', @columna = 'tipo';
+    ALTER TABLE dbo.movimientos_inventario ADD CONSTRAINT CK_movimientos_tipo
+        CHECK (tipo IN ('entrada', 'venta', 'merma', 'ajuste', 'devolucion'));
+END
+GO
+
 /* ==========================================================================
-   10. VISTAS (consultas reutilizables por el backend y por los reportes)
+   10. ESTADO DE LA VENTA (pendiente | completada | devuelta_parcial | devuelta)
+       pendiente  = pedido apartado, aún sin pagar o sin entregar
+       completada = pagada y entregada (cuenta en los totales)
+       devuelta   = se reembolsó todo; devuelta_parcial = se reembolsó una parte
+   ========================================================================== */
+IF COL_LENGTH('dbo.ventas', 'estado') IS NULL
+    ALTER TABLE dbo.ventas ADD estado VARCHAR(20) NOT NULL CONSTRAINT DF_ventas_estado DEFAULT 'completada';
+IF COL_LENGTH('dbo.ventas', 'total_devuelto') IS NULL
+    ALTER TABLE dbo.ventas ADD total_devuelto DECIMAL(12,2) NOT NULL CONSTRAINT DF_ventas_total_devuelto DEFAULT 0;
+IF COL_LENGTH('dbo.ventas', 'fecha_completada') IS NULL
+    ALTER TABLE dbo.ventas ADD fecha_completada DATETIME NULL;
+IF COL_LENGTH('dbo.ventas', 'observacion') IS NULL
+    ALTER TABLE dbo.ventas ADD observacion VARCHAR(255) NULL;
+-- origen: 'pos' = venta real; 'demo' = historial de práctica para entrenar la red neuronal
+IF COL_LENGTH('dbo.ventas', 'origen') IS NULL
+    ALTER TABLE dbo.ventas ADD origen VARCHAR(10) NOT NULL CONSTRAINT DF_ventas_origen DEFAULT 'pos';
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_ventas_estado')
+    ALTER TABLE dbo.ventas ADD CONSTRAINT CK_ventas_estado
+        CHECK (estado IN ('pendiente', 'completada', 'devuelta_parcial', 'devuelta'));
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_ventas_total_devuelto')
+    ALTER TABLE dbo.ventas ADD CONSTRAINT CK_ventas_total_devuelto
+        CHECK (total_devuelto >= 0 AND total_devuelto <= total);
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_ventas_origen')
+    ALTER TABLE dbo.ventas ADD CONSTRAINT CK_ventas_origen CHECK (origen IN ('pos', 'demo'));
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ventas_estado' AND object_id = OBJECT_ID('dbo.ventas'))
+    CREATE INDEX IX_ventas_estado ON dbo.ventas(estado, fecha_hora);
+GO
+
+/* ==========================================================================
+   11. DEVOLUCIONES (por ejemplo, un producto que salió dañado)
+       tipo   : producto_danado | producto_equivocado | cliente_insatisfecho | otro
+       accion : reembolso  -> se devuelve el dinero (baja el total neto de la venta)
+                reposicion -> se entrega un producto nuevo (se descuentan insumos otra vez)
+   ========================================================================== */
+IF OBJECT_ID(N'dbo.devoluciones', N'U') IS NULL
+CREATE TABLE dbo.devoluciones (
+    id_devolucion     INT IDENTITY(1,1) CONSTRAINT PK_devoluciones PRIMARY KEY,
+    id_venta          INT           NOT NULL,
+    fecha_hora        DATETIME      NOT NULL CONSTRAINT DF_devoluciones_fecha DEFAULT GETDATE(),
+    tipo              VARCHAR(30)   NOT NULL
+                      CONSTRAINT CK_devoluciones_tipo CHECK (tipo IN ('producto_danado', 'producto_equivocado', 'cliente_insatisfecho', 'otro')),
+    accion            VARCHAR(20)   NOT NULL
+                      CONSTRAINT CK_devoluciones_accion CHECK (accion IN ('reembolso', 'reposicion')),
+    motivo            VARCHAR(255)  NULL,
+    total_reembolsado DECIMAL(12,2) NOT NULL CONSTRAINT DF_devoluciones_total DEFAULT 0,
+    id_usuario        INT           NOT NULL,
+    CONSTRAINT FK_devoluciones_ventas   FOREIGN KEY (id_venta)   REFERENCES dbo.ventas(id_venta),
+    CONSTRAINT FK_devoluciones_usuarios FOREIGN KEY (id_usuario) REFERENCES dbo.usuarios(id_usuario)
+);
+GO
+IF OBJECT_ID(N'dbo.detalle_devoluciones', N'U') IS NULL
+CREATE TABLE dbo.detalle_devoluciones (
+    id_detalle_devolucion INT IDENTITY(1,1) CONSTRAINT PK_detalle_devoluciones PRIMARY KEY,
+    id_devolucion         INT           NOT NULL,
+    id_detalle            INT           NOT NULL,   -- línea de detalle_ventas que se devuelve
+    cantidad              INT           NOT NULL CONSTRAINT CK_detalle_dev_cantidad CHECK (cantidad > 0),
+    unidades              INT           NOT NULL,
+    subtotal              DECIMAL(12,2) NOT NULL,
+    CONSTRAINT FK_detalle_dev_devoluciones FOREIGN KEY (id_devolucion) REFERENCES dbo.devoluciones(id_devolucion) ON DELETE CASCADE,
+    CONSTRAINT FK_detalle_dev_detalle      FOREIGN KEY (id_detalle)    REFERENCES dbo.detalle_ventas(id_detalle)
+);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_devoluciones_venta' AND object_id = OBJECT_ID('dbo.devoluciones'))
+    CREATE INDEX IX_devoluciones_venta ON dbo.devoluciones(id_venta);
+GO
+
+/* ==========================================================================
+   12. INTELIGENCIA ARTIFICIAL (red neuronal de pronóstico de demanda)
+       modelos_ia           : pesos y métricas del modelo entrenado (JSON)
+       predicciones_demanda : arepas que el modelo pronostica por día y producto
+   ========================================================================== */
+IF OBJECT_ID(N'dbo.modelos_ia', N'U') IS NULL
+CREATE TABLE dbo.modelos_ia (
+    id_modelo           INT IDENTITY(1,1) CONSTRAINT PK_modelos_ia PRIMARY KEY,
+    nombre              VARCHAR(60)   NOT NULL,
+    arquitectura        VARCHAR(100)  NOT NULL,
+    pesos               NVARCHAR(MAX) NOT NULL,
+    metricas            NVARCHAR(MAX) NULL,
+    muestras            INT           NOT NULL,
+    fecha_entrenamiento DATETIME      NOT NULL CONSTRAINT DF_modelos_fecha DEFAULT GETDATE(),
+    activo              BIT           NOT NULL CONSTRAINT DF_modelos_activo DEFAULT 1,
+    id_usuario          INT           NULL,
+    CONSTRAINT FK_modelos_usuarios FOREIGN KEY (id_usuario) REFERENCES dbo.usuarios(id_usuario)
+);
+GO
+IF OBJECT_ID(N'dbo.predicciones_demanda', N'U') IS NULL
+CREATE TABLE dbo.predicciones_demanda (
+    id_prediccion      INT IDENTITY(1,1) CONSTRAINT PK_predicciones PRIMARY KEY,
+    id_modelo          INT      NOT NULL,
+    id_producto        INT      NOT NULL,
+    fecha_objetivo     DATE     NOT NULL,
+    unidades_predichas INT      NOT NULL CONSTRAINT CK_predicciones_unidades CHECK (unidades_predichas >= 0),
+    fecha_generada     DATETIME NOT NULL CONSTRAINT DF_predicciones_fecha DEFAULT GETDATE(),
+    CONSTRAINT FK_predicciones_modelos   FOREIGN KEY (id_modelo)   REFERENCES dbo.modelos_ia(id_modelo),
+    CONSTRAINT FK_predicciones_productos FOREIGN KEY (id_producto) REFERENCES dbo.productos(id_producto),
+    CONSTRAINT UQ_predicciones_dia_producto UNIQUE (fecha_objetivo, id_producto)
+);
+GO
+
+/* ==========================================================================
+   13. VISTAS (consultas reutilizables por el backend y por los reportes)
    ========================================================================== */
 CREATE OR ALTER VIEW dbo.vw_insumos_estado AS
 SELECT
@@ -385,6 +510,8 @@ SELECT
     v.fecha_hora,
     v.metodo_pago,
     v.total,
+    v.estado,
+    v.total_devuelto,
     v.id_cliente,
     c.nombre      AS cliente,
     v.id_usuario,

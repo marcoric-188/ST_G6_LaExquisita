@@ -14,12 +14,13 @@ const mermasRepo = require('../../repositories/mermas.repository');
 const insumosService = require('../insumos.service');
 const productosService = require('../productos.service');
 const { agruparPorProducto } = require('../dashboard.service');
+const pronosticoService = require('./pronostico.service');
 
 const PERIODOS = ['hoy', 'ayer', 'semana', 'mes', 'total'];
 
 async function construirContexto() {
     const [productos, insumos, periodos, porProducto, metodos, serie, estadisticasClientes,
-        clientes, mermasResumen, mermasRecientes] = await Promise.all([
+        clientes, mermasResumen, mermasRecientes, devoluciones, pronostico] = await Promise.all([
         productosService.listarConDisponibilidad(),
         insumosService.listar(),
         ventasRepo.resumenPorPeriodo(),
@@ -29,7 +30,9 @@ async function construirContexto() {
         clientesRepo.estadisticas(),
         clientesRepo.listar({ limite: 500 }),
         mermasRepo.resumenPorInsumo(30),
-        mermasRepo.listar({ limite: 5 })
+        mermasRepo.listar({ limite: 5 }),
+        ventasRepo.resumenDevoluciones(30),
+        pronosticoService.pronosticar().catch(() => null)
     ]);
 
     const ventas = {};
@@ -50,14 +53,18 @@ async function construirContexto() {
         notas: [
             'semana = últimos 7 días incluyendo hoy; mes = últimos 30 días incluyendo hoy.',
             'Cada paquete trae 10 arepas. Las recetas indican el gasto de insumo por UNA arepa.',
-            'paquetes_disponibles = paquetes que se pueden preparar con el stock actual de insumos.'
+            'paquetes_disponibles = paquetes que se pueden preparar con el stock actual de insumos.',
+            'Los totales de ventas son NETOS (sin pendientes y descontando reembolsos).',
+            'pronostico = resultado de la red neuronal: arepas estimadas por producto para los próximos días.'
         ],
         productos,
         insumos,
         ventas,
         serie_7_dias: serie,
         clientes: { estadisticas: estadisticasClientes, lista: clientes },
-        mermas: { resumen_30_dias: mermasResumen, recientes: mermasRecientes }
+        mermas: { resumen_30_dias: mermasResumen, recientes: mermasRecientes },
+        devoluciones_30_dias: devoluciones,
+        pronostico
     };
 }
 

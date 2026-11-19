@@ -35,4 +35,4 @@ const CTE_PERIODOS = `
 /** Expresión de unidades (arepas) de una línea de detalle. */
 const UNIDADES_LINEA = `COALESCE(d.unidades, CASE WHEN d.modalidad = 'unidad' THEN d.cantidad ELSE d.cantidad * p.unidades_por_paquete END)`;
 
-module.exports = { sql, db, num, patronLike, fecha, CTE_PERIODOS, UNIDADES_LINEA };
+module.exports = { sql, db, getPool, num, patronLike, fecha, CTE_PERIODOS, UNIDADES_LINEA };

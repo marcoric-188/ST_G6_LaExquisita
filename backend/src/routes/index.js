@@ -64,7 +64,11 @@ router.post('/mermas', autorizar(ADMIN, COCINA), h(mermas.registrar));
 router.get('/ventas', autorizar(ADMIN, CAJERO), h(ventas.listar));
 router.get('/ventas/:id', autorizar(ADMIN, CAJERO), h(ventas.obtener));
 router.post('/ventas', autorizar(ADMIN, CAJERO), h(ventas.registrar));
+router.post('/ventas/:id/completar', autorizar(ADMIN, CAJERO), h(ventas.completar));
+router.post('/ventas/:id/devoluciones', autorizar(ADMIN, CAJERO), h(ventas.devolver));
 
 router.post('/ia/chat', autorizar(...TODOS), limiteIA, h(ia.chat));
+router.get('/ia/pronostico', autorizar(...TODOS), h(ia.pronostico));
+router.post('/ia/entrenar', autorizar(ADMIN), h(ia.entrenar));
 
 module.exports = router;

@@ -104,12 +104,29 @@ async function registrarCompra(id, total, runner) {
             WHERE id_cliente = @id;`);
 }
 
+/** Resta un reembolso del acumulado del cliente y recalcula el rango. */
+async function descontarCompra(id, monto, runner) {
+    await db(runner).request()
+        .input('id', sql.Int, id)
+        .input('monto', sql.Decimal(12, 2), monto)
+        .query(`
+            UPDATE dbo.clientes
+            SET total_compras = CASE WHEN ISNULL(total_compras, 0) - @monto < 0 THEN 0 ELSE ISNULL(total_compras, 0) - @monto END,
+                rango = CASE
+                    WHEN ISNULL(total_compras, 0) - @monto >= 200000 THEN 'VIP'
+                    WHEN ISNULL(total_compras, 0) - @monto >= 100000 THEN 'Frecuente'
+                    WHEN ISNULL(numero_compras, 0) > 0 THEN 'Regular'
+                    ELSE 'Nuevo'
+                END
+            WHERE id_cliente = @id;`);
+}
+
 async function historialCompras(id, limite = 10) {
     const r = await db().request()
         .input('id', sql.Int, id)
         .input('limite', sql.Int, limite)
         .query(`
-            SELECT TOP (@limite) v.id_venta, ${fecha('v.fecha_hora', 'fecha_hora')}, v.total, v.metodo_pago
+            SELECT TOP (@limite) v.id_venta, ${fecha('v.fecha_hora', 'fecha_hora')}, v.total, v.metodo_pago, ISNULL(v.estado, 'completada') AS estado
             FROM dbo.ventas AS v
             WHERE v.id_cliente = @id
             ORDER BY v.id_venta DESC;`);
@@ -137,6 +154,7 @@ module.exports = {
     actualizar,
     desactivar,
     registrarCompra,
+    descontarCompra,
     historialCompras,
     estadisticas
 };

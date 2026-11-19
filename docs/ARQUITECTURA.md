@@ -47,8 +47,9 @@ Regla de oro: **cada capa solo habla con la capa de abajo**. La interfaz nunca e
 | Clientes | `GET/POST /clientes`, `GET/PUT/DELETE /clientes/:id` | `clientes.service` | `clientes.repository` |
 | Insumos y stock | `GET/POST /insumos`, `PUT/DELETE /insumos/:id`, `POST /insumos/:id/entradas`, `GET /insumos/movimientos` | `insumos.service` | `insumos.repository` |
 | Mermas | `GET/POST /mermas` | `mermas.service` | `mermas.repository`, `insumos.repository` |
-| Ventas (POS) | `GET/POST /ventas`, `GET /ventas/:id` | `ventas.service` | ventas, productos, insumos, clientes |
+| Ventas (POS) | `GET/POST /ventas`, `GET /ventas/:id`, `POST /ventas/:id/completar`, `POST /ventas/:id/devoluciones` | `ventas.service` | ventas, productos, insumos, clientes |
 | Asistente IA | `POST /ia/chat` | `ia/ia.service` → `contexto.service` + `motorLocal` (+ OpenAI opcional) | todos (solo lectura) |
+| Red neuronal | `GET /ia/pronostico`, `POST /ia/entrenar` | `ia/pronostico.service` → `ia/redNeuronal` | `ia.repository`, ventas, productos |
 | Salud | `GET /health` (prueba en vivo la conexión) | — | `SELECT 1` |
 
 ### Flujo de una venta (todo en UNA transacción)
@@ -71,6 +72,22 @@ POS (navegador)                 Backend                                  SQL Ser
                                     10. COMMIT  ──────────────────────────►
 recibo  ◄──────────────────────── 201 {id_venta, total, items, insumos_descontados}
 ```
+
+### Estados de una venta
+
+```
+                 completar (se cobra)
+   pendiente  ───────────────────────►  completada ──── reembolso parcial ───► devuelta_parcial
+ (apartada,                                 │                                        │
+  sin cobrar)                               └──────── reembolso total ───────► devuelta ◄─┘
+```
+
+- **Pendiente:** pedido apartado. Las arepas ya se prepararon, por eso el stock se descuenta al registrarla, pero no cuenta en lo vendido ni en el acumulado del cliente.
+- **Completada:** cobrada y entregada.
+- **Devolución** (solo sobre ventas completadas): tipo `producto_danado`, `producto_equivocado`, `cliente_insatisfecho` u `otro`, y una acción:
+  - **Reposición:** se entrega una arepa nueva. No se devuelve dinero y se descuentan otra vez los insumos de la receta (kardex tipo `devolucion`).
+  - **Reembolso:** se devuelve el dinero. Baja el total neto de la venta y el acumulado del cliente; la venta pasa a `devuelta_parcial` o `devuelta`.
+- Los reportes, el panel y la IA usan el **total neto** (`total - total_devuelto`) y excluyen las pendientes.
 
 ---
 
@@ -100,7 +117,7 @@ Es una aplicación de una sola página (SPA) con **JavaScript nativo en módulos
 
 | Archivo | Uso |
 |---------|-----|
-| `schema.sql` | Crea la base y las tablas si no existen; si ya existen (versión anterior), **agrega columnas faltantes sin borrar datos**. Incluye vistas `vw_insumos_estado` y `vw_ventas_detalle`. |
+| `schema.sql` | Crea la base y las 13 tablas si no existen; si ya existen (versión anterior), **agrega columnas faltantes sin borrar datos**. Incluye vistas `vw_insumos_estado` y `vw_ventas_detalle`. |
 | `seed.sql` | Datos iniciales idempotentes: usuarios, insumos, productos Grande/Pequeña, recetas y clientes de ejemplo. |
 | `consultas.sql` | Reportes de solo lectura (cierre de caja, kardex, ranking, etc.). |
 
@@ -108,10 +125,13 @@ Es una aplicación de una sola página (SPA) con **JavaScript nativo en módulos
 
 ```
 usuarios ──< ventas >── clientes            productos ──< recetas >── insumos
-   │            │                                │                       │
-   │            └──< detalle_ventas >────────────┘                       │
+   │            │  │                             │  │                    │
+   │            │  └──< detalle_ventas >─────────┘  │                    │
+   │            │            │                      │                    │
+   │            └──< devoluciones ──< detalle_devoluciones               │
    ├──< mermas >─────────────────────────────────────────────────────────┤
-   └──< movimientos_inventario (kardex) >────────────────────────────────┘
+   ├──< movimientos_inventario (kardex) >────────────────────────────────┘
+   └──< modelos_ia ──< predicciones_demanda >── productos
 ```
 
 Cambios respecto a la versión anterior y por qué:
@@ -119,14 +139,20 @@ Cambios respecto a la versión anterior y por qué:
 | Tabla | Cambio | Motivo |
 |-------|--------|--------|
 | `clientes` | **Nueva** | El backend la consultaba pero no existía → todo el módulo daba error. |
-| `ventas` | + `id_cliente` | Cada venta queda asociada a su cliente. Método de pago normalizado (+ Daviplata, transferencia). |
+| `ventas` | + `id_cliente` | Cada venta queda asociada a su cliente. Método de pago: solo efectivo o transferencia. |
 | `detalle_ventas` | + `modalidad` (`paquete`/`unidad`), + `unidades` | Venta por paquete **y** por cantidad. El código anterior insertaba una columna `nombre_producto` que no existía. |
 | `productos` | + `precio_unidad`, `tamano`, `nombre_corto`, `imagen`, `unidades_por_paquete`, `activo` | Paquete Arepa Grande / Pequeña, precio por unidad e imagen desde la BD. |
 | `insumos` | precisión `DECIMAL(12,3)`, + `activo` | Gramos exactos (antes 0.005 Kg se redondeaba). |
 | `recetas` | precisión `DECIMAL(10,4)` | Gasto exacto por arepa. |
 | `mermas` | + `observacion` | El código anterior insertaba `descripcion`/`fecha`, que no existían en la tabla. |
 | `usuarios` | + `password_hash`, `activo`, `debe_cambiar_password`, `intentos_fallidos`, `bloqueado_hasta`, `ultimo_acceso` | Inicio de sesión seguro. |
-| `movimientos_inventario` | **Nueva** | Kardex: trazabilidad de cada entrada, venta y merma. |
+| `movimientos_inventario` | **Nueva** | Kardex: trazabilidad de cada entrada, venta, merma y reposición. |
+| `ventas` (v4) | + `estado`, `total_devuelto`, `fecha_completada`, `observacion`, `origen` | Estado de compra (pendiente/completada/devuelta) y total neto. `origen = 'demo'` marca el historial de práctica. |
+| `devoluciones` + `detalle_devoluciones` | **Nuevas** | Tipo de devolución (producto dañado, etc.), acción (reembolso/reposición) y qué productos se devolvieron. |
+| `modelos_ia` | **Nueva** | Guarda la red neuronal entrenada (pesos en JSON) y sus métricas. |
+| `predicciones_demanda` | **Nueva** | Arepas pronosticadas por día y producto; se comparan con lo vendido de verdad. |
+
+Más detalle sobre cómo se guardan los datos en [`PERSISTENCIA.md`](PERSISTENCIA.md) y sobre la IA en [`IA.md`](IA.md).
 
 ---
 
@@ -161,5 +187,7 @@ Cambios respecto a la versión anterior y por qué:
 | `--hoja-600` | `#62893A` | Hoja verde de la mazorca | Éxito, stock OK, confirmar venta, insumos |
 | `--morado-600` | `#7B4F80` | Hoja morada de la mazorca | Asistente IA |
 | `--brasa-600` | `#C4462B` | Fuego de la plancha | Alertas, mermas, eliminar |
+
+Tipografía: **Poppins** para títulos y marca (geométrica, legible a distancia en la pantalla del mostrador) e **Inter** para textos, tablas y cifras (diseñada para pantallas; sus números tienen el mismo ancho, lo que alinea los precios). Ambas están dentro del proyecto (`frontend/vendor/fuentes`), así que funcionan sin internet.
 
 Interfaz dinámica: contadores animados, gráfico de barras que crece, granos de maíz flotando, tarjetas que se elevan al pasar el mouse, selector paquete/unidad deslizante, avisos emergentes, esqueletos de carga y recibo animado. Se respeta `prefers-reduced-motion`.

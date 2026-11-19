@@ -1,11 +1,12 @@
 # La Exquisita · Sistema POS & ERP
 
-Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choclo: ventas de mostrador por **paquete (x10) o por unidad**, clientes con rangos, inventario de insumos con kardex, control de mermas y un **asistente IA conectado en vivo a SQL Server**.
+Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choclo: ventas de mostrador por **paquete (x10) o por unidad** con estados (pendiente, completada, devuelta) y devoluciones, clientes con rangos, inventario de insumos con kardex, control de mermas, una **red neuronal que pronostica la demanda** y un **asistente IA conectado en vivo a SQL Server**.
 
 * **Proyecto:** Ingeniería de Software · UMB · Grupo 6
 * **Stack:** HTML + CSS + JavaScript (módulos) · Node.js + Express · SQL Server
-* **Arquitectura:** ver [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) (capas del front y del back, modelo de datos, seguridad y colorimetría)
+* **Documentación:** [`docs/`](docs/README.md) · [Arquitectura](docs/ARQUITECTURA.md) · [Servicio de IA](docs/IA.md) · [Persistencia](docs/PERSISTENCIA.md) · [Pruebas](docs/PRUEBAS.md) · [Guía de la demo](docs/GUIA_DEMO.md)
 
+![Inicio con el pronóstico de la red neuronal](docs/evidencias/capturas/01-inicio-pronostico.jpg)
 
 ---
 
@@ -13,15 +14,17 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 
 | Módulo | Descripción |
 |--------|-------------|
-| **Inicio** | Indicadores en vivo: vendido hoy y en 30 días, ticket promedio, clientes, alertas de stock, gráfico de 7 días, paquetes que alcanzan con el inventario y últimas ventas. |
-| **Venta Rápida POS** | 1) Buscar y seleccionar el cliente, o registrar uno nuevo sin salir de la venta. 2) **Paquete Arepa Grande** y **Paquete Arepa Pequeña**, cada uno por paquete x10 o por unidad, con cantidad. 3) Método de pago (efectivo, Nequi, Daviplata, tarjeta, transferencia), confirmación y recibo imprimible. |
+| **Inicio** | Indicadores en vivo (netos), **producción sugerida para mañana por la red neuronal**, gráfico de 7 días, paquetes que alcanzan con el inventario, alertas de stock y últimas ventas. |
+| **Venta Rápida POS** | 1) Buscar y seleccionar el cliente, o registrar uno nuevo sin salir de la venta. 2) **Paquete Arepa Grande** y **Paquete Arepa Pequeña**, cada uno por paquete x10 o por unidad, con cantidad. 3) Estado **Pagada ahora** o **Pendiente** (pedido por cobrar), método de pago (efectivo o transferencia), confirmación y recibo imprimible. |
 | **Clientes** | Directorio con búsqueda, rangos automáticos (Nuevo → Regular → Frecuente → VIP), detalle con historial de compras, edición y “vender a este cliente”. |
 | **Insumos y Stock** | Existencias con barras de nivel, consumo de los últimos 7 días, días de cobertura, entradas de stock, creación/edición y kardex de movimientos. |
 | **Control de Mermas** | Registro de pérdidas por insumo y motivo; **descuenta el stock** en la misma transacción. |
-| **Ventas** | Historial con filtros (hoy, 7 días, 30 días, rango de fechas), totales y detalle de cada venta. |
-| **Asistente IA** | Responde con cifras reales de la base de datos: “¿cuánto maíz hay?”, “¿cuántos paquetes grandes puedo hacer?”, “¿cuántas arepas pequeñas se vendieron esta semana?”, “¿qué debo comprar?”, “¿cuánto ha comprado Tienda Don Pepe?”… Funciona sin internet (motor local) y opcionalmente con OpenAI. |
+| **Ventas** | Historial con filtros por fecha y **estado**, totales netos y pendiente por cobrar. En el detalle: **completar** una venta pendiente o **registrar una devolución** (producto dañado, equivocado, cliente insatisfecho) con **reposición** del producto o **reembolso**. |
+| **Asistente IA** | Responde con cifras reales de la base de datos: “¿cuántas arepas preparo mañana?”, “¿cuánto maíz hay?”, “¿cuántos paquetes grandes puedo hacer?”, “¿hay ventas pendientes?”, “devoluciones del mes”, “¿qué debo comprar?”… Funciona sin internet (motor local) y opcionalmente con OpenAI. |
+| **Red neuronal** | Perceptrón multicapa programado desde cero (14-8-1) que aprende del historial de ventas y pronostica las arepas de los próximos 7 días por producto. Ver [`docs/IA.md`](docs/IA.md). |
 
-![POS](docs/capturas/pos.jpg)
+![POS con venta pendiente](docs/evidencias/capturas/02-pos-pendiente.jpg)
+
 ---
 
 ## Estructura
@@ -36,12 +39,14 @@ ST_G6_LaExquisita/
 │   │   ├── middlewares/           seguridad, sesión/roles, errores
 │   │   ├── routes/                endpoints y permisos por rol
 │   │   ├── controllers/           HTTP ↔ servicios
-│   │   ├── services/              reglas de negocio y transacciones (+ ia/)
+│   │   ├── services/              reglas de negocio y transacciones
+│   │   │   └── ia/                    red neuronal, pronóstico y asistente
 │   │   ├── repositories/          ÚNICO lugar con SQL (parametrizado)
 │   │   ├── database/migrator.js   ejecuta schema.sql + seed.sql al arrancar
 │   │   └── utils/                 validación, errores
-│   ├── scripts/                   migrar.js · crear-usuario.js
+│   ├── scripts/                   migrar · crear-usuario · generar-historial (demo IA)
 │   ├── test/                      pruebas unitarias (npm test)
+│   ├── pruebas/                   pruebas de integración y de extremo a extremo
 │   └── .env.example               plantilla de configuración
 ├── frontend/                    ← Interfaz
 │   ├── index.html                 estructura
@@ -59,7 +64,9 @@ ST_G6_LaExquisita/
 │   ├── schema.sql                 esquema idempotente (crea/actualiza sin borrar datos)
 │   ├── seed.sql                   datos iniciales idempotentes
 │   └── consultas.sql              reportes de solo lectura
-└── docs/ARQUITECTURA.md
+└── docs/                        ← documentación
+    ├── ARQUITECTURA.md · IA.md · PERSISTENCIA.md · PRUEBAS.md · GUIA_DEMO.md
+    └── evidencias/                resultados de pruebas y capturas
 ```
 
 ---
@@ -67,7 +74,7 @@ ST_G6_LaExquisita/
 ## Puesta en marcha (Windows + SQL Server)
 
 ### Requisitos
-* **Node.js
+* **Node.js** 18.19 o superior
 * **SQL Server** (instancia `localhost\SQL2025`)
 * Para autenticación de Windows: el driver **ODBC Driver 17 u 18 for SQL Server**
 
@@ -139,11 +146,18 @@ OPENAI_MODEL=gpt-5.5
 ```
 Si OpenAI falla, responde automáticamente el motor local. La IA es de **solo lectura**.
 
+La red neuronal necesita al menos 21 días con ventas. Para la demostración se puede cargar un historial de práctica (queda marcado como `demo` y se borra con `--borrar`):
+```bash
+npm run historial-demo
+```
+
 ## Pruebas
 ```bash
 cd backend
-npm test
+npm test           # 19 pruebas unitarias
+npm run test:api   # 15 pruebas de integración (con el backend corriendo; ver docs/PRUEBAS.md)
 ```
+Resultados y casos de prueba en [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
 
 ## Ajustes frecuentes
 * **Precios:** `UPDATE dbo.productos SET precio = 24000, precio_unidad = 2500 WHERE tamano = 'grande';`
