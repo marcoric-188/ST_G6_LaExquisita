@@ -11,7 +11,7 @@
  * ============================================================================
  */
 import { $, html, on } from '../utils/dom.js';
-import { dinero, numero, fechaHora, METODOS_PAGO } from '../utils/format.js';
+import { dinero, numero, fechaHora, METODOS_PAGO, numeroVenta } from '../utils/format.js';
 import { estado } from '../core/store.js';
 import { productosService } from '../services/productos.service.js';
 import { ventasService } from '../services/ventas.service.js';
@@ -234,7 +234,7 @@ function mostrarRecibo(venta) {
         <div class="recibo-check"><i class="fa-solid fa-check"></i></div>
         <h3>${venta.estado === 'pendiente' ? 'Pedido pendiente registrado' : '¡Venta registrada!'}</h3>
         ${venta.estado === 'pendiente' ? html`<p><span class="badge badge-pendiente"><i class="fa-solid fa-clock"></i> Pendiente por cobrar</span></p>` : ''}
-        <p class="texto-suave">Venta #V-${String(venta.id_venta).padStart(4, '0')} · ${fechaHora(venta.fecha_hora)}</p>
+        <p class="texto-suave">Venta #${numeroVenta(venta)} · ${fechaHora(venta.fecha_hora)}</p>
         <table class="recibo-tabla">
             ${venta.items.map(i => html`<tr><td>${i.cantidad} × ${i.nombre}<br><small class="texto-suave">${numero(i.unidades)} arepas · ${dinero(i.precio_unitario)} c/u</small></td><td>${dinero(i.subtotal)}</td></tr>`)}
         </table>

@@ -2,7 +2,7 @@
  * VISTA · Clientes (directorio, rangos, detalle, edición)
  */
 import { $, html, on, debounce } from '../utils/dom.js';
-import { dinero, numero, fechaCorta, fechaHora, iniciales, METODOS_PAGO } from '../utils/format.js';
+import { dinero, numero, fechaCorta, fechaHora, iniciales, METODOS_PAGO, numeroVenta } from '../utils/format.js';
 import { estado, tieneRol } from '../core/store.js';
 import { clientesService } from '../services/clientes.service.js';
 import { abrirFormularioCliente } from '../components/clienteForm.js';
@@ -12,14 +12,12 @@ let clientes = [];
 
 function pintarResumen(e) {
     const datos = [
-        ['Clientes activos', e.total, 'fa-users'],
-        ['VIP', e.vip, 'fa-crown'],
-        ['Frecuentes', e.frecuentes, 'fa-star'],
-        ['Regulares', e.regulares, 'fa-user-check'],
-        ['Nuevos (sin compras)', e.nuevos, 'fa-seedling']
+        ['Clientes activos', e.total],
+        ['Frecuentes', e.frecuentes],
+        ['Nuevos', e.nuevos]
     ];
-    $('#clientes-resumen').innerHTML = html`${datos.map(([t, v, i], k) => html`
-        <div class="chip-resumen" style="animation-delay:${k * 50}ms"><small><i class="fa-solid ${i}"></i> ${t}</small><strong>${numero(v)}</strong></div>`)}`;
+    $('#clientes-resumen').innerHTML = html`${datos.map(([t, v], k) => html`
+        <div class="chip-resumen" style="animation-delay:${k * 50}ms"><small>${t}</small><strong>${numero(v)}</strong></div>`)}`;
 }
 
 function pintarTabla() {
@@ -37,7 +35,7 @@ function pintarTabla() {
             <td><span class="badge badge-neutro">${c.tipo_cliente === 'negocio' ? 'Negocio' : 'Persona'}</span></td>
             <td class="num">${numero(c.numero_compras)}</td>
             <td class="num"><span class="monto">${dinero(c.total_compras)}</span></td>
-            <td><span class="badge badge-${c.rango}">${c.rango === 'VIP' ? html`<i class="fa-solid fa-crown"></i> ` : ''}${c.rango}</span></td>
+            <td><span class="badge badge-${c.rango}" title="${c.dias_compra_mes} día(s) con compras en los últimos 30 días">${c.rango}</span></td>
             <td><div class="acciones">
                 <button type="button" class="btn btn-sm btn-maiz" data-action="vender" title="Venderle"><i class="fa-solid fa-cash-register"></i></button>
                 <button type="button" class="btn btn-sm btn-ghost" data-action="ver" title="Ver detalle"><i class="fa-solid fa-eye"></i></button>
@@ -75,11 +73,12 @@ async function verDetalle(id) {
                 <div><small>Dirección</small>${c.direccion || '—'}</div>
                 <div><small>Total comprado</small><span class="monto">${dinero(c.total_compras)}</span></div>
                 <div><small>Compras · última</small>${numero(c.numero_compras)} · ${fechaCorta(c.ultima_compra)}</div>
+                <div><small>Días con compras (30 días)</small>${numero(c.dias_compra_mes)}</div>
             </div>
             <h4 style="margin-bottom:8px">Últimas compras</h4>
             ${c.compras.length ? html`<div class="lista-compacta">${c.compras.map(v => html`
                 <div class="item-compacto"><span class="icono-redondo"><i class="fa-solid ${(METODOS_PAGO[v.metodo_pago] || METODOS_PAGO.efectivo).icono}"></i></span>
-                <span class="info"><strong>Venta #${v.id_venta}</strong><small>${fechaHora(v.fecha_hora)}</small></span><span class="valor">${dinero(v.total)}</span></div>`)}</div>`
+                <span class="info"><strong>Venta #${numeroVenta(v)}</strong><small>${fechaHora(v.fecha_hora)}</small></span><span class="valor">${dinero(v.total)}</span></div>`)}</div>`
                 : vacio('fa-receipt', 'Este cliente aún no tiene compras.')}
             <div class="modal-pie" style="padding:16px 0 12px"><button type="button" class="btn btn-maiz" data-action="vender-detalle"><i class="fa-solid fa-cash-register"></i> Registrar venta a este cliente</button></div>`;
         $('[data-action="vender-detalle"]').addEventListener('click', () => {

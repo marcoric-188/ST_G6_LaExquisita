@@ -381,11 +381,11 @@ input.invalido, select.invalido { border-color: var(--brasa-600); box-shadow: 0 
 
 /* ------------------------------ Insignias y chips ------------------------------ */
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.badge-ok, .badge-Regular { background: var(--hoja-100); color: var(--hoja-700); }
-.badge-bajo, .badge-Frecuente { background: var(--maiz-100); color: #8a5c00; }
+.badge-ok, .badge-Frecuente { background: var(--hoja-100); color: var(--hoja-700); }
+.badge-Ocasional { background: var(--crema-100); color: var(--texto-suave); }
+.badge-bajo { background: var(--maiz-100); color: #8a5c00; }
 .badge-critico { background: #fde0cf; color: #a2480c; }
 .badge-agotado { background: var(--brasa-100); color: var(--brasa-700); }
-.badge-VIP { background: linear-gradient(135deg, var(--maiz-400), var(--dorado-400)); color: var(--tostado-900); box-shadow: 0 3px 10px rgba(240, 180, 41, .35); }
 .badge-Nuevo { background: var(--morado-100); color: var(--morado-700); }
 .badge-neutro { background: var(--crema-100); color: var(--texto-suave); }
 .badge-entrada { background: var(--hoja-100); color: var(--hoja-700); }
@@ -407,7 +407,7 @@ input.invalido, select.invalido { border-color: var(--brasa-600); box-shadow: 0 
 .chip:hover { border-color: var(--maiz-500); color: var(--tostado-800); transform: translateY(-1px); }
 .chip.activo { background: var(--tostado-800); border-color: var(--tostado-800); color: var(--maiz-300); box-shadow: 0 6px 16px -6px var(--tostado-800); }
 
-.chips-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.chips-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
 .chip-resumen { background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px 16px; box-shadow: var(--sombra-sm); animation: subir .4s var(--transicion) both; }
 .chip-resumen small { color: var(--texto-suave); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; }
 .chip-resumen strong { display: block; font-family: var(--fuente-titulos); font-size: 24px; color: var(--tostado-900); }
@@ -601,6 +601,7 @@ input.invalido, select.invalido { border-color: var(--brasa-600); box-shadow: 0 
 .pron-meta .dato strong { font-size: 15px; }
 .pron-vacio { grid-column: 1 / -1; display: flex; gap: 14px; align-items: center; padding: 18px; border-radius: 16px; background: var(--superficie); border: 1px dashed var(--crema-300); color: var(--texto-suave); }
 .pron-vacio i { font-size: 28px; color: var(--morado-600); }
+.pron-aprendiendo { display: flex; align-items: center; padding: 18px; border-radius: 16px; background: var(--superficie); border: 1px dashed var(--crema-300); color: var(--texto-suave); font-size: 14px; line-height: 1.6; }
 
 /* ------------------------------ Devoluciones ------------------------------ */
 .devolucion-items { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 16px; }

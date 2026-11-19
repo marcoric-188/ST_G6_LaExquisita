@@ -59,7 +59,7 @@ export const ESTADOS_STOCK = {
 export const ESTADOS_VENTA = {
     completada: { etiqueta: 'Completada', icono: 'fa-circle-check' },
     pendiente: { etiqueta: 'Pendiente', icono: 'fa-clock' },
-    devuelta_parcial: { etiqueta: 'Devuelta parcial', icono: 'fa-rotate-left' },
+    devuelta_parcial: { etiqueta: 'Devolución parcial', icono: 'fa-rotate-left' },
     devuelta: { etiqueta: 'Devuelta', icono: 'fa-rotate-left' }
 };
 
@@ -69,3 +69,6 @@ export const TIPOS_DEVOLUCION = {
     cliente_insatisfecho: 'Cliente insatisfecho',
     otro: 'Otro'
 };
+
+/** Número visible de la venta: 0001, 0002... (consecutivo, sin saltos). */
+export const numeroVenta = (v) => String(v?.numero ?? v?.id_venta ?? v).padStart(4, '0');

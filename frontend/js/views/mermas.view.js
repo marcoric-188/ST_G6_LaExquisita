@@ -13,12 +13,12 @@ let motivos = [];
 function pintarResumen(resumen) {
     const contenedor = $('#mermas-resumen');
     if (!resumen.length) {
-        contenedor.innerHTML = html`<div class="chip-resumen"><small><i class="fa-solid fa-circle-check"></i> Últimos 30 días</small><strong>Sin mermas 👏</strong></div>`;
+        contenedor.innerHTML = html`<div class="chip-resumen"><small>Últimos 30 días</small><strong>Sin mermas</strong></div>`;
         return;
     }
     contenedor.innerHTML = html`${resumen.map((m, k) => html`
         <div class="chip-resumen" style="animation-delay:${k * 50}ms">
-            <small><i class="fa-solid fa-trash-can"></i> ${m.insumo} · 30 días</small>
+            <small>${m.insumo} · 30 días</small>
             <strong>${numero(m.cantidad)} <span class="texto-suave" style="font-size:14px">${m.unidad_medida}</span></strong>
             <small class="texto-suave">${m.registros} registro(s)</small>
         </div>`)}`;

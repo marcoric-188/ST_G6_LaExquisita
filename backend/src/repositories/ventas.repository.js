@@ -26,9 +26,12 @@ async function crear({ total, metodo_pago, id_usuario, id_cliente, estado = 'com
         .input('fecha', sql.VarChar(19), fecha_hora)
         .query(`
             DECLARE @f DATETIME = COALESCE(CONVERT(DATETIME, @fecha, 126), GETDATE());
-            INSERT INTO dbo.ventas (fecha_hora, total, metodo_pago, id_usuario, id_cliente, estado, observacion, origen, fecha_completada)
-            OUTPUT INSERTED.id_venta, ${fecha('INSERTED.fecha_hora', 'fecha_hora')}
-            VALUES (@f, @total, @metodo, @id_usuario, @id_cliente, @estado, @observacion, @origen,
+            -- Número consecutivo visible (0001, 0002...). UPDLOCK + HOLDLOCK evita que
+            -- dos ventas simultáneas tomen el mismo número.
+            DECLARE @numero INT = (SELECT ISNULL(MAX(numero), 0) + 1 FROM dbo.ventas WITH (UPDLOCK, HOLDLOCK));
+            INSERT INTO dbo.ventas (numero, fecha_hora, total, metodo_pago, id_usuario, id_cliente, estado, observacion, origen, fecha_completada)
+            OUTPUT INSERTED.id_venta, INSERTED.numero, ${fecha('INSERTED.fecha_hora', 'fecha_hora')}
+            VALUES (@numero, @f, @total, @metodo, @id_usuario, @id_cliente, @estado, @observacion, @origen,
                     CASE WHEN @estado = 'completada' THEN @f ELSE NULL END);`);
     return r.recordset[0];
 }
@@ -50,7 +53,7 @@ async function crearDetalle({ id_venta, id_producto, modalidad, cantidad, unidad
 async function bloquear(id, runner) {
     const r = await db(runner).request()
         .input('id', sql.Int, id)
-        .query(`SELECT id_venta, id_cliente, total, ISNULL(total_devuelto, 0) AS total_devuelto,
+        .query(`SELECT id_venta, ISNULL(numero, id_venta) AS numero, id_cliente, total, ISNULL(total_devuelto, 0) AS total_devuelto,
                        ISNULL(estado, 'completada') AS estado, metodo_pago
                 FROM dbo.ventas WITH (UPDLOCK, ROWLOCK)
                 WHERE id_venta = @id;`);
@@ -139,7 +142,7 @@ async function listar({ desde = null, hasta = null, id_cliente = null, estado = 
         .input('limite', sql.Int, limite)
         .query(`
             SELECT TOP (@limite)
-                   v.id_venta, ${fecha('v.fecha_hora', 'fecha_hora')}, v.metodo_pago, v.total,
+                   v.id_venta, ISNULL(v.numero, v.id_venta) AS numero, ${fecha('v.fecha_hora', 'fecha_hora')}, v.metodo_pago, v.total,
                    ISNULL(v.total_devuelto, 0) AS total_devuelto, ${NETO} AS total_neto,
                    ISNULL(v.estado, 'completada') AS estado,
                    v.id_cliente, c.nombre AS cliente, u.nombre AS vendedor,
@@ -156,7 +159,8 @@ async function listar({ desde = null, hasta = null, id_cliente = null, estado = 
             WHERE (@desde IS NULL OR v.fecha_hora >= CAST(@desde AS DATE))
               AND (@hasta IS NULL OR v.fecha_hora < DATEADD(DAY, 1, CAST(@hasta AS DATE)))
               AND (@id_cliente IS NULL OR v.id_cliente = @id_cliente)
-              AND (@estado IS NULL OR ISNULL(v.estado, 'completada') = @estado)
+              AND (@estado IS NULL OR ISNULL(v.estado, 'completada') = @estado
+                   OR (@estado = 'devuelta' AND v.estado = 'devuelta_parcial'))
             ORDER BY v.id_venta DESC;`);
     return r.recordset.map(f => ({
         ...f,
@@ -196,7 +200,7 @@ async function buscarPorId(id) {
     const cabecera = await db().request()
         .input('id', sql.Int, id)
         .query(`
-            SELECT v.id_venta, ${fecha('v.fecha_hora', 'fecha_hora')}, ${fecha('v.fecha_completada', 'fecha_completada')},
+            SELECT v.id_venta, ISNULL(v.numero, v.id_venta) AS numero, ${fecha('v.fecha_hora', 'fecha_hora')}, ${fecha('v.fecha_completada', 'fecha_completada')},
                    v.metodo_pago, v.total, ISNULL(v.total_devuelto, 0) AS total_devuelto, ${NETO} AS total_neto,
                    ISNULL(v.estado, 'completada') AS estado, v.observacion,
                    v.id_cliente, c.nombre AS cliente, c.documento, c.telefono, u.nombre AS vendedor

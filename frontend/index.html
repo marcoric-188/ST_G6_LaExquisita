@@ -79,7 +79,7 @@
                 <img src="assets/img/logo.png" alt="Logo La Exquisita" class="marca-logo">
                 <span class="marca-texto">
                     <strong>La Exquisita</strong>
-                    <small>POS & ERP · Arepas de choclo</small>
+                    <small>POS & ERP</small>
                 </span>
             </a>
 
@@ -110,13 +110,12 @@
                 <div class="hero">
                     <div class="granos" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
                     <div class="hero-texto">
-                        <span class="pastilla"><span class="punto-vivo"></span> Conectado a SQL Server</span>
-                        <h1 id="hero-saludo">¡Hola!</h1>
+                        <h1>Panel de inicio</h1>
                         <p id="hero-fecha" class="hero-fecha"></p>
                         <p class="hero-sub">Control de mostrador, clientes, inventario de insumos, mermas e inteligencia artificial en un solo lugar.</p>
                         <div class="hero-acciones">
                             <a href="#/pos" class="btn btn-maiz btn-lg" data-roles="administrador,cajero"><i class="fa-solid fa-cash-register"></i> Nueva venta</a>
-                            <a href="#/asistente" class="btn btn-ghost-light btn-lg"><i class="fa-solid fa-wand-magic-sparkles"></i> Preguntar a la IA</a>
+                            <a href="#/asistente" class="btn btn-ghost-light btn-lg">Preguntar a la IA</a>
                         </div>
                     </div>
                     <img src="assets/img/logo.png" alt="" class="hero-logo" aria-hidden="true">
@@ -132,7 +131,7 @@
                     <a href="#/clientes" class="modulo modulo-clientes" data-roles="administrador,cajero">
                         <span class="modulo-icono"><i class="fa-solid fa-users"></i></span>
                         <h3>Clientes</h3>
-                        <p>Directorio con rangos automáticos según el volumen de compras.</p>
+                        <p>Directorio de clientes con su historial y frecuencia de compra.</p>
                         <span class="modulo-ir">Ver clientes <i class="fa-solid fa-arrow-right"></i></span>
                     </a>
                     <a href="#/insumos" class="modulo modulo-insumos">
@@ -149,7 +148,7 @@
                     </a>
                 </div>
 
-                <h2 class="titulo-seccion"><i class="fa-solid fa-heart-pulse"></i> Pulso del negocio</h2>
+                <h2 class="titulo-seccion">Pulso del negocio</h2>
                 <div class="kpis">
                     <div class="kpi kpi-tostado">
                         <span class="kpi-icono"><i class="fa-solid fa-receipt"></i></span>
@@ -169,14 +168,6 @@
                     </div>
                 </div>
 
-                <div class="card pronostico" id="panel-pronostico">
-                    <div class="card-titulo">
-                        <h3><i class="fa-solid fa-brain"></i> Producción sugerida para mañana · Red neuronal</h3>
-                        <button type="button" class="btn btn-sm btn-ghost" data-action="reentrenar" data-roles="administrador"><i class="fa-solid fa-rotate"></i> Reentrenar</button>
-                    </div>
-                    <div id="pronostico-cuerpo" class="pronostico-cuerpo"><div class="esqueleto esqueleto-bloque"></div></div>
-                </div>
-
                 <div class="panel-grid">
                     <div class="card">
                         <div class="card-titulo"><h3><i class="fa-solid fa-chart-column"></i> Ventas de los últimos 7 días</h3></div>
@@ -193,6 +184,13 @@
                         <div id="panel-ultimas" class="lista-compacta"></div>
                     </div>
                 </div>
+                <div class="card pronostico" id="panel-pronostico">
+                    <div class="card-titulo">
+                        <h3>Producción sugerida para mañana (red neuronal)</h3>
+                        <button type="button" class="btn btn-sm btn-ghost" data-action="reentrenar" data-roles="administrador"><i class="fa-solid fa-rotate"></i> Reentrenar</button>
+                    </div>
+                    <div id="pronostico-cuerpo" class="pronostico-cuerpo"><div class="esqueleto esqueleto-bloque"></div></div>
+                </div>
             </section>
 
             <!-- ============ 2. POS ============ -->
@@ -201,7 +199,6 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Terminal de Venta POS</h2>
-                        <p>1. Elige el cliente · 2. Agrega paquetes o unidades · 3. Confirma la venta.</p>
                     </div>
                 </div>
 
@@ -235,7 +232,7 @@
                                 <button type="button" class="activo" data-estado="completada"><i class="fa-solid fa-circle-check"></i> Pagada ahora</button>
                                 <button type="button" data-estado="pendiente"><i class="fa-solid fa-clock"></i> Pendiente</button>
                             </div>
-                            <input type="text" id="venta-observacion" maxlength="255" placeholder="Nota del pedido (ej: recoge a las 5 p. m.)" hidden>
+                            <input type="text" id="venta-observacion" maxlength="255" placeholder="Nota del pedido" hidden>
                             <span class="etiqueta-campo">Método de pago</span>
                             <div class="chips" id="metodos-pago" role="radiogroup" aria-label="Método de pago">
                                 <button type="button" class="chip activo" data-metodo="efectivo"><i class="fa-solid fa-money-bill-wave"></i> Efectivo</button>
@@ -261,7 +258,6 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Clientes</h2>
-                        <p>Rangos automáticos: Nuevo → Regular → Frecuente ($100.000+) → VIP ($200.000+).</p>
                     </div>
                     <button type="button" class="btn btn-maiz ml-auto" data-action="nuevo-cliente"><i class="fa-solid fa-user-plus"></i> Nuevo cliente</button>
                 </div>
@@ -274,7 +270,7 @@
                     </div>
                     <div class="tabla-scroll">
                         <table class="tabla">
-                            <thead><tr><th>Cliente</th><th>Contacto</th><th>Tipo</th><th class="num">Compras</th><th class="num">Acumulado</th><th>Rango</th><th></th></tr></thead>
+                            <thead><tr><th>Cliente</th><th>Contacto</th><th>Tipo</th><th class="num">Compras</th><th class="num">Acumulado</th><th>Frecuencia</th><th></th></tr></thead>
                             <tbody id="tabla-clientes"></tbody>
                         </table>
                     </div>
@@ -311,7 +307,6 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Control de Mermas</h2>
-                        <p>Cada merma descuenta el insumo del inventario en la misma transacción.</p>
                     </div>
                     <button type="button" class="btn btn-brasa ml-auto" data-action="nueva-merma" data-roles="administrador,cocina"><i class="fa-solid fa-plus"></i> Registrar merma</button>
                 </div>
@@ -332,7 +327,6 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Historial de Ventas</h2>
-                        <p>Estados: pendiente → completada → devuelta. Los totales son netos (sin pendientes y descontando reembolsos).</p>
                     </div>
                     <a href="#/pos" class="btn btn-primary ml-auto"><i class="fa-solid fa-cash-register"></i> Nueva venta</a>
                 </div>
@@ -348,8 +342,7 @@
                             <option value="">Todos los estados</option>
                             <option value="completada">Completadas</option>
                             <option value="pendiente">Pendientes</option>
-                            <option value="devuelta_parcial">Devueltas parcialmente</option>
-                            <option value="devuelta">Devueltas</option>
+                            <option value="devuelta">Con devolución</option>
                         </select>
                         <div class="rango-fechas">
                             <label>Desde <input type="date" id="ventas-desde"></label>
@@ -377,9 +370,8 @@
                     <a href="#/inicio" class="btn-volver" aria-label="Volver al inicio"><i class="fa-solid fa-arrow-left"></i></a>
                     <div>
                         <h2>Asistente IA</h2>
-                        <p>Consulta en vivo la base de datos: stock, ventas, capacidad, clientes y mermas.</p>
+                        <p>Pregunta por ventas, inventario, clientes, mermas o la producción de mañana.</p>
                     </div>
-                    <span class="pastilla pastilla-morado ml-auto" id="ia-modo"><i class="fa-solid fa-microchip"></i> Conectado a SQL Server</span>
                 </div>
                 <div class="card chat">
                     <div id="chat-mensajes" class="chat-mensajes" aria-live="polite"></div>
@@ -396,14 +388,13 @@
                         <button type="button" class="chip">Resumen general</button>
                     </div>
                     <form id="form-chat" class="chat-form" autocomplete="off">
-                        <input type="text" id="chat-input" maxlength="1000" placeholder="Escribe tu pregunta… ej: ¿cuántas arepas pequeñas se vendieron esta semana?" aria-label="Pregunta para el asistente" required>
-                        <button type="submit" class="btn btn-morado"><i class="fa-solid fa-paper-plane"></i><span> Preguntar</span></button>
+                        <input type="text" id="chat-input" maxlength="1000" placeholder="Escribe tu pregunta" aria-label="Pregunta para el asistente" required>
+                        <button type="submit" class="btn btn-morado">Preguntar</button>
                     </form>
                 </div>
             </section>
         </main>
 
-        <footer class="pie">La Exquisita · POS & ERP · Ingeniería de Software UMB · Datos en vivo desde SQL Server</footer>
     </div>
 
     <!-- ===================== MODALES ===================== -->

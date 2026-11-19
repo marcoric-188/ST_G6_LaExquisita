@@ -163,29 +163,29 @@ async function iniciar() {
                 if (/ETIMEOUT|ESOCKET|ECONNREFUSED|Failed to connect|Could not connect|IM002|Login failed|not found|msnodesqlv8/i.test(`${error.message} ${error.code || ''}`)) throw error;
                 // Si falla un script, se informa pero se intenta trabajar con la base existente.
                 estado.migracion = { ok: false, error: error.message, fecha: new Date().toISOString() };
-                console.error('⚠️  La migración automática falló:', error.message);
-                console.error('   Puedes ejecutar database/schema.sql y database/seed.sql manualmente en SSMS.');
+                console.error('La migración automática falló:', error.message);
+                console.error('Puedes ejecutar database/schema.sql y database/seed.sql manualmente en SSMS.');
             }
         }
         pool = await abrirPool(env.db.database);
         pool.on('error', (error) => {
-            console.error('⚠️  Error en el pool de SQL Server:', error.message);
+            console.error('Error en el pool de SQL Server:', error.message);
         });
         estado.conectada = true;
         estado.ultimoError = null;
         estado.sugerencia = null;
         estado.desde = new Date().toISOString();
-        console.log(`✅ Conectado a SQL Server · ${nombreServidor()} · base ${env.db.database} · ${estado.driver}`);
+        console.log(`Conectado a SQL Server · ${nombreServidor()} · base ${env.db.database} · ${estado.driver}`);
         for (const fn of alConectar) {
-            try { await fn(pool); } catch (error) { console.error('⚠️ ', error.message); }
+            try { await fn(pool); } catch (error) { console.error('', error.message); }
         }
     } catch (error) {
         estado.conectada = false;
         estado.ultimoError = error.message;
         estado.sugerencia = sugerirSolucion(error);
-        console.error(`❌ No fue posible conectar con SQL Server: ${error.message}`);
-        console.error(`   👉 ${estado.sugerencia}`);
-        console.error(`   Reintentando en ${env.db.reintentoSegundos} s...`);
+        console.error(`No fue posible conectar con SQL Server: ${error.message}`);
+        console.error(`${estado.sugerencia}`);
+        console.error(`Reintentando en ${env.db.reintentoSegundos} s...`);
         timerReintento = setTimeout(iniciar, env.db.reintentoSegundos * 1000);
         timerReintento.unref();
     } finally {

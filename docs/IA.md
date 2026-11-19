@@ -113,19 +113,19 @@ Todas se normalizan (se dividen entre una escala) para que queden entre 0 y 1.
 
 **Validación:** antes de guardar el modelo, se entrena sin los últimos 14 días y se mide el error en esos días que la red no vio. Se compara contra un método simple (el promedio de los últimos 7 días).
 
-Resultado con el historial de práctica de 90 días:
+Resultado con un historial de práctica de 90 días, el mismo de las capturas de [`EVIDENCIAS.md`](EVIDENCIAS.md) (las cifras cambian según los datos; las actuales se ven en la tarjeta del Inicio):
 
 | Métrica | Red neuronal | Promedio de 7 días |
 |---------|--------------|--------------------|
-| Error medio absoluto (MAE) | **±4,6 arepas** por producto y día | ±14,1 arepas |
-| Mejora | **67,6 % menos error** | — |
-| Precisión aproximada | **92 %** | — |
+| Error medio absoluto (MAE) | **±10,2 arepas** por producto y día | ±16,4 arepas |
+| Mejora | **38,2 % menos error** | — |
+| Precisión aproximada | **84 %** | — |
 
 La red supera al promedio porque aprende el patrón semanal: sábado y domingo altos, lunes bajo.
 
 **Persistencia del modelo:** los pesos, la escala y la lista de productos se guardan como JSON en la tabla `modelos_ia`, junto con sus métricas y la curva de error. Al reiniciar el servidor no hay que volver a entrenar.
 
-**Requisito de datos:** necesita al menos **21 días con ventas**. Si no los hay, el panel lo explica en vez de inventar un número. Para la demostración:
+**Requisito de datos:** empieza a aprender con ventas de **2 días** anteriores a hoy. Mientras tenga menos de 14 días, el pronóstico combina la red con el promedio reciente (el peso de la red sube con cada día, y desde 14 días decide sola). Así no da cifras sin sentido para días de la semana que aún no ha visto. La semana completa se muestra desde 7 días con ventas. Para tener un historial más largo en la demostración:
 
 ```bash
 npm run historial-demo            # 90 días de ventas de práctica (origen = 'demo')

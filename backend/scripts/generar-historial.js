@@ -35,7 +35,7 @@ async function borrarDemo() {
         DELETE FROM dbo.ventas WHERE origen = 'demo';
         SELECT @@ROWCOUNT AS borradas;`);
     await pool.request().query('UPDATE dbo.modelos_ia SET activo = 0 WHERE activo = 1;');
-    console.log(`🧹 Ventas de práctica eliminadas: ${r.recordset[0].borradas}. La red neuronal se reentrenará con los datos reales.`);
+    console.log(`Ventas de práctica eliminadas: ${r.recordset[0].borradas}. La red neuronal se reentrenará con los datos reales.`);
 }
 
 async function generar() {
@@ -92,8 +92,8 @@ async function generar() {
         }
     }
     await getPool().request().query('UPDATE dbo.modelos_ia SET activo = 0 WHERE activo = 1;');
-    console.log(`✅ Historial de práctica creado: ${ventas} ventas en ${dias} días (origen = 'demo').`);
-    console.log('   Abre el Inicio o pregúntale a la IA "¿cuántas arepas preparo mañana?" para que la red neuronal se entrene.');
+    console.log(`Historial de práctica creado: ${ventas} ventas en ${dias} días (origen = 'demo').`);
+    console.log('Abre el Inicio o pregúntale a la IA "¿cuántas arepas preparo mañana?" para que la red neuronal se entrene.');
 }
 
 (async () => {
@@ -105,7 +105,7 @@ async function generar() {
         await database.cerrar();
         process.exit(0);
     } catch (error) {
-        console.error('❌', error.message);
+        console.error('', error.message);
         process.exit(1);
     }
 })();

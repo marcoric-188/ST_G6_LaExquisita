@@ -27,7 +27,7 @@ function manejadorErrores(error, req, res, next) {
     // Se cayó la conexión con SQL Server en pleno uso (servicio detenido, red, etc.)
     const codigo = error.code || (error.originalError && error.originalError.code);
     if (error.name === 'ConnectionError' || ['ESOCKET', 'ECONNCLOSED', 'ETIMEOUT', 'ENOTOPEN', 'ECONNRESET', 'ENOTFOUND'].includes(codigo)) {
-        console.error(`⚠️  [${req.method} ${req.originalUrl}] Conexión con SQL Server: ${error.message}`);
+        console.error(`[${req.method} ${req.originalUrl}] Conexión con SQL Server: ${error.message}`);
         return res.status(503).json({
             success: false,
             error: 'Se perdió la conexión con SQL Server. Verifica que el servicio esté encendido e intenta de nuevo.',
@@ -45,7 +45,7 @@ function manejadorErrores(error, req, res, next) {
         return res.status(409).json({ success: false, error: 'La operación viola una regla de la base de datos (dato relacionado inexistente o valor no permitido).' });
     }
 
-    console.error(`❌ [${req.method} ${req.originalUrl}]`, error);
+    console.error(`[${req.method} ${req.originalUrl}]`, error);
     res.status(500).json({ success: false, error: 'Ocurrió un error interno. Revisa la consola del backend.' });
 }
 

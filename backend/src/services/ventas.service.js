@@ -152,7 +152,7 @@ async function registrar(body, usuario) {
         }
 
         await descontarInsumos(consumo, {
-            tipo: 'venta', referencia: `Venta #${venta.id_venta}`, usuario, mensaje: 'No se registró la venta.'
+            tipo: 'venta', referencia: `Venta #${String(venta.numero).padStart(4, '0')}`, usuario, mensaje: 'No se registró la venta.'
         }, tx);
 
         // Solo una venta cobrada suma al acumulado y al rango del cliente.
@@ -162,6 +162,7 @@ async function registrar(body, usuario) {
 
         return {
             id_venta: venta.id_venta,
+            numero: venta.numero,
             fecha_hora: venta.fecha_hora,
             total,
             estado: datos.estado,
@@ -182,7 +183,7 @@ async function completar(id, body) {
     return withTransaction(async (tx) => {
         const venta = await ventasRepo.bloquear(id, tx);
         if (!venta) throw notFound('La venta no existe.');
-        if (venta.estado !== 'pendiente') throw conflict(`La venta #${id} no está pendiente (estado: ${venta.estado}).`);
+        if (venta.estado !== 'pendiente') throw conflict(`La venta #${String(venta.numero || id).padStart(4, '0')} no está pendiente (estado: ${venta.estado}).`);
 
         await ventasRepo.completar(id, datos.metodo_pago, tx);
         if (venta.id_cliente) await clientesRepo.registrarCompra(venta.id_cliente, venta.total, tx);

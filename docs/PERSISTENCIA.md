@@ -7,7 +7,7 @@
 | Dato | Tabla | Cuándo se escribe |
 |------|-------|-------------------|
 | Usuarios, rol, contraseña cifrada (bcrypt), intentos fallidos | `usuarios` | Al crear el usuario, en cada inicio de sesión y al cambiar la contraseña |
-| Clientes, acumulado de compras y rango | `clientes` | Al registrar o editar un cliente, al completar una venta y al reembolsar |
+| Clientes (la frecuencia y el acumulado se calculan desde `ventas`) | `clientes` | Al registrar o editar un cliente, al completar una venta y al reembolsar |
 | Productos, precios por paquete y por unidad | `productos` | Datos iniciales (`seed.sql`) o ajuste por SQL |
 | Recetas (insumo por arepa) | `recetas` | Datos iniciales |
 | Stock de insumos | `insumos` | En cada venta, merma, entrada de stock y reposición |
@@ -74,6 +74,6 @@ Son tres cualidades que debe cumplir la información de un sistema transaccional
 
 - Si una venta descuenta 1,5 Kg de maíz, el kardex registra exactamente −1,5 Kg y el stock resultante. Venta, kardex e inventario cuadran.
 - El **total neto** de una venta es siempre `total − total_devuelto`, y la base de datos impide que se devuelva más de lo vendido (`CHECK` + validación en el servicio).
-- El acumulado del cliente sube al **completar** la venta y baja al **reembolsar**. Una venta pendiente no lo modifica.
+- El acumulado, las compras y la frecuencia del cliente se calculan **directamente desde sus ventas** (netas, sin pendientes). Por eso siempre coinciden con el historial.
 - Todos los reportes (Inicio, Historial, IA) usan las mismas reglas: excluyen las pendientes y usan el total neto. Por eso muestran las mismas cifras.
 - El precio lo calcula el servidor desde la tabla `productos`. El navegador no puede enviar un precio distinto.

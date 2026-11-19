@@ -32,7 +32,7 @@ Regla de oro: **cada capa solo habla con la capa de abajo**. La interfaz nunca e
 | 2 | **Middlewares (seguridad transversal)** | `src/middlewares/` | Cabeceras seguras y CSP (helmet), límite de peticiones, solo JSON, CORS restringido, sesión (`autenticar`), roles (`autorizar`) y manejo central de errores. | Un cajero no puede borrar insumos (403). |
 | 3 | **Rutas (API REST)** | `src/routes/index.js` | Declara cada endpoint, su método HTTP y qué roles pueden usarlo. | `POST /api/ventas` → administrador, cajero |
 | 4 | **Controladores** | `src/controllers/` | Traducen HTTP ↔ servicio: leen `req`, llaman al servicio y responden JSON. Sin reglas de negocio ni SQL. | `ventas.controller.registrar` |
-| 5 | **Servicios (lógica de negocio)** | `src/services/` | Reglas del negocio, validación de datos y **transacciones**. | Precio desde la BD, venta por paquete/unidad, descuento por receta, rango del cliente. |
+| 5 | **Servicios (lógica de negocio)** | `src/services/` | Reglas del negocio, validación de datos y **transacciones**. | Precio desde la BD, venta por paquete/unidad, descuento por receta, frecuencia del cliente. |
 | 6 | **Repositorios (acceso a datos)** | `src/repositories/` | **Único lugar con SQL**. Siempre con parámetros (`@id`), lo que evita la inyección SQL. Convierten DECIMAL a número. | `insumosRepo.descontar(id, cantidad, tx)` |
 | 7 | **Migración** | `src/database/migrator.js` | Ejecuta `database/schema.sql` y `seed.sql` al arrancar (son idempotentes). | Crea `clientes` si no existe, agrega columnas faltantes. |
 | — | **Utilidades** | `src/utils/` | `AppError` (errores con código HTTP), `validator` (validación de entradas), `asyncHandler`. | — |
@@ -68,7 +68,7 @@ POS (navegador)                 Backend                                  SQL Ser
                                      7. descuenta stock SOLO si alcanza ─►  UPDATE insumos ... WHERE stock >= x
                                         (si no alcanza → ROLLBACK, 409)
                                      8. kardex                       ────►  INSERT movimientos_inventario
-                                     9. acumulado y rango del cliente ───►  UPDATE clientes
+                                     9. acumulado del cliente          ───►  UPDATE clientes
                                     10. COMMIT  ──────────────────────────►
 recibo  ◄──────────────────────── 201 {id_venta, total, items, insumos_descontados}
 ```

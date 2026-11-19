@@ -1,21 +1,21 @@
-Pruebas de integración (API + SQL Server) · La Exquisita · 2026-11-19 01:23
+Pruebas de integración (API + SQL Server) · La Exquisita · 2026-11-19 00:10
 Comando: npm run test:api  (backend corriendo y conectado a SQL Server)
 
-✔ PI-01 · El servidor está conectado a SQL Server (50.875295ms)
-✔ PI-02 · Seguridad: sin sesión la API responde 401 (4.67365ms)
-✔ PI-03 · Seguridad: contraseña incorrecta es rechazada (111.467695ms)
-✔ PI-04 · Inicio de sesión correcto (105.954892ms)
-✔ PI-05 · Registrar cliente y rechazar documento duplicado (25.393954ms)
-✔ PI-06 · Venta completada: precio desde la BD y descuento de insumos por receta (60.516413ms)
-✔ PI-07 · Stock insuficiente: la venta se cancela completa (rollback) (42.005637ms)
-✔ PI-08 · Venta pendiente: no suma al cliente hasta completarse (39.434447ms)
-✔ PI-09 · Pendiente no se puede devolver; al completarla suma al cliente (59.469797ms)
-✔ PI-10 · Devolución por producto dañado con reposición: descuenta insumos otra vez (52.621653ms)
-✔ PI-11 · Devolución con reembolso: baja el total neto y cambia el estado (63.056482ms)
-✔ PI-12 · Merma: se registra y descuenta el stock; no permite más de lo disponible (52.890073ms)
-✔ PI-13 · Validación: datos inválidos se rechazan con mensaje claro (7.778758ms)
-✔ PI-14 · IA: el asistente responde con datos de la BD (110.406911ms)
-✔ PI-15 · IA: la red neuronal pronostica la demanda de mañana (99.757165ms)
+✔ PI-01 · El servidor está conectado a SQL Server (47.959558ms)
+✔ PI-02 · Seguridad: sin sesión la API responde 401 (5.008191ms)
+✔ PI-03 · Seguridad: contraseña incorrecta es rechazada (138.410911ms)
+✔ PI-04 · Inicio de sesión correcto (109.56501ms)
+✔ PI-05 · Registrar cliente y rechazar documento duplicado (43.602355ms)
+✔ PI-06 · Venta completada: precio desde la BD y descuento de insumos por receta (97.412539ms)
+✔ PI-07 · Stock insuficiente: la venta se cancela completa (rollback) (57.044342ms)
+✔ PI-08 · Venta pendiente: no suma al cliente hasta completarse (39.106328ms)
+✔ PI-09 · Pendiente no se puede devolver; al completarla suma al cliente (40.900676ms)
+✔ PI-10 · Devolución por producto dañado con reposición: descuenta insumos otra vez (65.300211ms)
+✔ PI-11 · Devolución con reembolso: baja el total neto y cambia el estado (46.982675ms)
+✔ PI-12 · Merma: se registra y descuenta el stock; no permite más de lo disponible (30.479423ms)
+✔ PI-13 · Validación: datos inválidos se rechazan con mensaje claro (4.85143ms)
+✔ PI-14 · IA: el asistente responde con datos de la BD (147.556966ms)
+✔ PI-15 · IA: la red neuronal pronostica la demanda de mañana (61.63956ms)
 ℹ tests 15
 ℹ suites 0
 ℹ pass 15
@@ -23,4 +23,4 @@ Comando: npm run test:api  (backend corriendo y conectado a SQL Server)
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 968.057654
+ℹ duration_ms 1004.717707

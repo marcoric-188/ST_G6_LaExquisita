@@ -36,11 +36,7 @@ async function preguntar(texto) {
     try {
         const r = await iaService.preguntar(texto, historial.slice(-8));
         escribiendo.remove();
-        const hora = new Date(r.datos_al).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-        agregarMensaje(r.respuesta, 'bot', `${r.modo === 'openai' ? 'IA OpenAI' : 'Motor local'} · datos de SQL Server a las ${hora}`);
-        $('#ia-modo').innerHTML = r.modo === 'openai'
-            ? '<i class="fa-solid fa-microchip"></i> OpenAI + SQL Server'
-            : '<i class="fa-solid fa-microchip"></i> Motor local + SQL Server';
+        agregarMensaje(r.respuesta, 'bot');
         historial.push({ role: 'user', content: texto }, { role: 'assistant', content: r.respuesta });
     } catch (error) {
         escribiendo.remove();
@@ -54,7 +50,7 @@ async function preguntar(texto) {
 export const asistenteVista = {
     iniciar() {
         const nombre = estado.usuario ? estado.usuario.nombre.split(' ')[0] : '';
-        agregarMensaje(`¡Hola, ${nombre}! 🌽 Soy el asistente de La Exquisita. Leo en vivo la base de datos, así que puedo decirte cantidades exactas de stock, ventas por día, paquetes o unidades, cuánto alcanza para producir, clientes y mermas. ¿Qué quieres saber?`, 'bot');
+        agregarMensaje(`Hola, ${nombre}. Pregúntame lo que necesites del negocio: ventas, inventario, clientes, mermas o cuántas arepas preparar mañana.`, 'bot');
         $('#form-chat').addEventListener('submit', (e) => {
             e.preventDefault();
             preguntar($('#chat-input').value);

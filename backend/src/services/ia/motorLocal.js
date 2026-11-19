@@ -39,7 +39,6 @@ const EN_PERIODO = {
     mes: 'en los últimos 30 días',
     total: 'en todo el historial'
 };
-const ICONO_ESTADO = { ok: '✅', bajo: '⚠️', critico: '🔴', agotado: '⛔' };
 const TEXTO_ESTADO = { ok: 'nivel correcto', bajo: 'por debajo del mínimo', critico: 'nivel crítico', agotado: 'agotado' };
 
 const PALABRAS_VACIAS = new Set(['de', 'la', 'el', 'los', 'las', 'del', 'y', 'con', 'para', 'por', 'un', 'una']);
@@ -165,7 +164,7 @@ function responderVentasTamano(ctx, periodo, tamano) {
         if (!x) return `• ${titulo}: no se vendieron arepas ${etiqueta}.`;
         return `• ${titulo}: ${plural(x.arepas, 'arepa', 'arepas')} ${etiqueta} (${plural(x.paquetes, 'paquete', 'paquetes')} + ${plural(x.unidades_sueltas, 'unidad suelta', 'unidades sueltas')}) · ${dinero(x.total)}`;
     });
-    return [`🫓 Arepas ${etiqueta} vendidas:`, ...lineas].join('\n');
+    return [`Arepas ${etiqueta} vendidas:`, ...lineas].join('\n');
 }
 
 function responderVentas(ctx, { periodo, tamano }) {
@@ -176,13 +175,13 @@ function responderVentas(ctx, { periodo, tamano }) {
         if (tamano) productos = productos.filter(p => p.tamano === tamano);
         if (!v.ventas) return `No hay ventas registradas ${EN_PERIODO[periodo]}.`;
         const lineas = [
-            `📊 Ventas de ${ETIQUETA_PERIODO[periodo]}: ${plural(v.ventas, 'venta', 'ventas')} por ${dinero(v.total)} (ticket promedio ${dinero(v.ticket_promedio)}).`
+            `Ventas de ${ETIQUETA_PERIODO[periodo]}: ${plural(v.ventas, 'venta', 'ventas')} por ${dinero(v.total)} (ticket promedio ${dinero(v.ticket_promedio)}).`
         ];
         if (productos.length) lineas.push(...productos.map(lineaProducto));
         else if (tamano) lineas.push(`• No se vendieron arepas ${tamano === 'grande' ? 'grandes' : 'pequeñas'} en ese periodo.`);
         return lineas.join('\n');
     }
-    const r = ['📊 Resumen de ventas registradas en SQL Server:'];
+    const r = ['Resumen de ventas registradas en SQL Server:'];
     for (const p of ['hoy', 'semana', 'mes', 'total']) {
         const v = ctx.ventas[p];
         r.push(`• ${ETIQUETA_PERIODO[p][0].toUpperCase()}${ETIQUETA_PERIODO[p].slice(1)}: ${plural(v.ventas, 'venta', 'ventas')} · ${dinero(v.total)}`);
@@ -198,9 +197,9 @@ function responderVentas(ctx, { periodo, tamano }) {
 }
 
 function responderInsumo(ctx, insumo) {
-    const estado = `${ICONO_ESTADO[insumo.estado] || ''} ${TEXTO_ESTADO[insumo.estado] || insumo.estado}`.trim();
+    const estado = TEXTO_ESTADO[insumo.estado] || insumo.estado;
     const lineas = [
-        `📦 ${insumo.nombre}: hay ${n(insumo.stock_actual)} ${insumo.unidad_medida} (mínimo ${n(insumo.stock_minimo)} ${insumo.unidad_medida}) → ${estado}.`
+        `${insumo.nombre}: hay ${n(insumo.stock_actual)} ${insumo.unidad_medida} (mínimo ${n(insumo.stock_minimo)} ${insumo.unidad_medida}) → ${estado}.`
     ];
     if (insumo.consumo_7_dias > 0) {
         lineas.push(`• Consumo por ventas en los últimos 7 días: ${n(insumo.consumo_7_dias)} ${insumo.unidad_medida}.`);
@@ -218,9 +217,9 @@ function responderInsumo(ctx, insumo) {
 function responderInventario(ctx, { insumos }) {
     if (insumos.length) return insumos.map(i => responderInsumo(ctx, i)).join('\n\n');
     const alertas = ctx.insumos.filter(i => i.estado !== 'ok');
-    const lineas = [`📦 Inventario actual (${plural(ctx.insumos.length, 'insumo', 'insumos')}):`];
+    const lineas = [`Inventario actual (${plural(ctx.insumos.length, 'insumo', 'insumos')}):`];
     for (const i of ctx.insumos) {
-        lineas.push(`${ICONO_ESTADO[i.estado] || '•'} ${i.nombre}: ${n(i.stock_actual)} ${i.unidad_medida} (mín. ${n(i.stock_minimo)})`);
+        lineas.push(`• ${i.nombre}: ${n(i.stock_actual)} ${i.unidad_medida} (mín. ${n(i.stock_minimo)})${i.estado !== 'ok' ? ` · ${TEXTO_ESTADO[i.estado]}` : ''}`);
     }
     lineas.push('', alertas.length
         ? `Atención: ${plural(alertas.length, 'insumo necesita', 'insumos necesitan')} revisión: ${alertas.map(i => i.nombre).join(', ')}.`
@@ -231,12 +230,12 @@ function responderInventario(ctx, { insumos }) {
 function responderCompras(ctx) {
     const pendientes = ctx.insumos.filter(i => i.stock_actual <= i.stock_minimo * 1.2);
     if (!pendientes.length) {
-        return '🛒 No hace falta comprar nada por ahora: todos los insumos están por encima de su mínimo (con 20% de margen).';
+        return 'No hace falta comprar nada por ahora: todos los insumos están por encima de su mínimo (con 20% de margen).';
     }
-    return ['🛒 Sugerencia de compra (para llegar al doble del stock mínimo):',
+    return ['Sugerencia de compra (para llegar al doble del stock mínimo):',
         ...pendientes.map(i => {
             const sugerido = Math.max(0, i.stock_minimo * 2 - i.stock_actual);
-            return `${ICONO_ESTADO[i.estado] || '•'} ${i.nombre}: hay ${n(i.stock_actual)} ${i.unidad_medida}; comprar aprox. ${n(Math.ceil(sugerido * 10) / 10)} ${i.unidad_medida}.`;
+            return `• ${i.nombre}: hay ${n(i.stock_actual)} ${i.unidad_medida}; comprar aprox. ${n(Math.ceil(sugerido * 10) / 10)} ${i.unidad_medida}.`;
         }),
         '', 'Es una recomendación basada en el stock mínimo configurado; ajústala según tu proveedor.'].join('\n');
 }
@@ -246,7 +245,7 @@ function responderCapacidad(ctx, { tamano, insumos }) {
     let productos = ctx.productos;
     if (tamano) productos = productos.filter(p => p.tamano === tamano);
     if (!productos.length) return 'No encontré productos activos con receta para calcular la capacidad.';
-    const lineas = ['🫓 Con el inventario actual alcanza para preparar:'];
+    const lineas = ['Con el inventario actual alcanza para preparar:'];
     for (const p of productos) {
         if (p.unidades_disponibles === null) {
             lineas.push(`• ${p.nombre}: no tiene receta registrada, no puedo calcularlo.`);
@@ -261,7 +260,7 @@ function responderCapacidad(ctx, { tamano, insumos }) {
 function responderPrecios(ctx, { tamano }) {
     let productos = ctx.productos;
     if (tamano) productos = productos.filter(p => p.tamano === tamano);
-    return ['💲 Precios vigentes en la base de datos:',
+    return ['Precios vigentes en la base de datos:',
         ...productos.map(p => `• ${p.nombre}: ${dinero(p.precio)} el paquete` +
             (p.precio_unidad ? ` · ${dinero(p.precio_unidad)} la unidad suelta` : ''))].join('\n');
 }
@@ -271,7 +270,7 @@ function responderPagos(ctx, { periodo }) {
     const metodos = [...ctx.ventas[p].metodos_pago].sort((a, b) => b.total - a.total);
     if (!metodos.length) return `No hay ventas registradas ${EN_PERIODO[p]}.`;
     const total = metodos.reduce((acc, m) => acc + m.total, 0);
-    return [`💳 Métodos de pago ${EN_PERIODO[p]}:`,
+    return [`Métodos de pago ${EN_PERIODO[p]}:`,
         ...metodos.map(m => `• ${m.metodo_pago[0].toUpperCase()}${m.metodo_pago.slice(1)}: ${plural(m.ventas, 'venta', 'ventas')} · ${dinero(m.total)} (${Math.round((m.total / total) * 100)}%)`)].join('\n');
 }
 
@@ -280,7 +279,7 @@ function responderRanking(ctx, { periodo }) {
     if (!periodo && !ctx.ventas.mes.por_producto.length) p = 'total';
     const productos = ctx.ventas[p].por_producto;
     if (!productos.length) return `Todavía no hay ventas ${EN_PERIODO[p]} para armar un ranking.`;
-    return [`🏆 Productos más vendidos ${EN_PERIODO[p]} (por arepas):`,
+    return [`Productos más vendidos ${EN_PERIODO[p]} (por arepas):`,
         ...productos.map((x, i) => `${i + 1}. ${x.nombre}: ${plural(x.arepas, 'arepa', 'arepas')} · ${dinero(x.total)}`)].join('\n');
 }
 
@@ -288,12 +287,12 @@ function responderClientes(ctx) {
     const e = ctx.clientes.estadisticas;
     const top = ctx.clientes.lista.slice(0, 5).filter(c => c.total_compras > 0);
     const lineas = [
-        `👥 Hay ${plural(e.total, 'cliente activo', 'clientes activos')} (${n(e.nuevos_30_dias)} registrados en los últimos 30 días).`,
-        `• Rangos: VIP ${n(e.vip)} · Frecuentes ${n(e.frecuentes)} · Regulares ${n(e.regulares)} · Nuevos ${n(e.nuevos)}`
+        `Hay ${plural(e.total, 'cliente activo', 'clientes activos')} (${n(e.nuevos_30_dias)} registrados en los últimos 30 días).`,
+        `• Frecuentes (compran 4 o más días al mes): ${n(e.frecuentes)} · Ocasionales: ${n(e.ocasionales)} · Nuevos (sin compras): ${n(e.nuevos)}`
     ];
     if (top.length) {
         lineas.push('', 'Top clientes por compras:',
-            ...top.map((c, i) => `${i + 1}. ${c.nombre} (${c.rango}): ${dinero(c.total_compras)} en ${plural(c.numero_compras, 'compra', 'compras')}`));
+            ...top.map((c, i) => `${i + 1}. ${c.nombre}: ${dinero(c.total_compras)} en ${plural(c.numero_compras, 'compra', 'compras')}`));
     }
     return lineas.join('\n');
 }
@@ -301,7 +300,7 @@ function responderClientes(ctx) {
 function responderCliente(cliente) {
     const fecha = cliente.ultima_compra ? new Date(cliente.ultima_compra).toLocaleDateString('es-CO', { dateStyle: 'medium' }) : 'sin compras aún';
     return [
-        `👤 ${cliente.nombre} (${cliente.tipo_cliente === 'negocio' ? 'negocio' : 'persona'}) · rango ${cliente.rango}`,
+        `${cliente.nombre} (${cliente.tipo_cliente === 'negocio' ? 'negocio' : 'persona'}) · cliente ${cliente.rango.toLowerCase()}`,
         `• Total comprado: ${dinero(cliente.total_compras)} en ${plural(cliente.numero_compras, 'compra', 'compras')}`,
         `• Última compra: ${fecha}`,
         cliente.telefono ? `• Teléfono: ${cliente.telefono}` : null,
@@ -314,10 +313,10 @@ function responderMermas(ctx, { insumos }) {
     if (insumos.length) resumen = resumen.filter(m => insumos.some(i => i.id_insumo === m.id_insumo));
     if (!resumen.length) {
         return insumos.length
-            ? `No hay mermas de ${insumos.map(i => i.nombre).join(', ')} en los últimos 30 días. 👏`
-            : 'No hay mermas registradas en los últimos 30 días. 👏';
+            ? `No hay mermas de ${insumos.map(i => i.nombre).join(', ')} en los últimos 30 días.`
+            : 'No hay mermas registradas en los últimos 30 días.';
     }
-    const lineas = ['🗑️ Mermas de los últimos 30 días:',
+    const lineas = ['Mermas de los últimos 30 días:',
         ...resumen.map(m => `• ${m.insumo}: ${n(m.cantidad)} ${m.unidad_medida} en ${plural(m.registros, 'registro', 'registros')}`)];
     const recientes = ctx.mermas.recientes.slice(0, 3);
     if (recientes.length && !insumos.length) {
@@ -333,7 +332,7 @@ function responderResumen(ctx) {
     const top = (mes.por_producto[0] || null);
     const mermas = ctx.mermas.resumen_30_dias.reduce((acc, m) => acc + m.registros, 0);
     return [
-        `📋 Resumen de La Exquisita · ${ctx.fecha_local}`,
+        `Resumen de La Exquisita · ${ctx.fecha_local}`,
         `• Hoy: ${plural(hoy.ventas, 'venta', 'ventas')} por ${dinero(hoy.total)}.`,
         `• Últimos 30 días: ${plural(mes.ventas, 'venta', 'ventas')} por ${dinero(mes.total)} (ticket promedio ${dinero(mes.ticket_promedio)}).`,
         top ? `• Producto estrella del mes: ${top.nombre} (${plural(top.arepas, 'arepa', 'arepas')}).` : '• Aún no hay ventas este mes para elegir producto estrella.',
@@ -355,41 +354,45 @@ function responderPronostico(ctx, { tamano }) {
     const p = ctx.pronostico;
     if (!p || p.estado !== 'ok') {
         const detalle = p && p.mensaje ? p.mensaje : 'La red neuronal aún no tiene un modelo entrenado.';
-        return `🔮 ${detalle}\nCuando haya más historial de ventas podrá pronosticar cuántas arepas preparar.`;
+        return `${detalle}\nCuando haya más historial de ventas podrá pronosticar cuántas arepas preparar.`;
     }
     let productos = p.manana.productos;
     if (tamano) productos = productos.filter(x => x.tamano === tamano);
     const m = p.modelo.metricas || {};
     const lineas = [
-        `🔮 Pronóstico de la red neuronal para mañana (${p.manana.dia_semana} ${p.manana.fecha}):`,
+        `Pronóstico de la red neuronal para mañana (${p.manana.dia_semana} ${p.manana.fecha}):`,
         ...productos.map(x => `• ${x.nombre}: ${plural(x.unidades, 'arepa', 'arepas')} → preparar ${plural(x.paquetes, 'paquete', 'paquetes')}`),
         `Total estimado: ${plural(p.manana.total_arepas, 'arepa', 'arepas')}.`
     ];
-    if (p.alertas.length) lineas.push('', '⚠️ Insumos:', ...p.alertas.map(a => `• ${a}`));
-    else lineas.push('', '✅ El inventario actual alcanza para producir lo pronosticado.');
-    lineas.push('', `Modelo: ${p.modelo.arquitectura} · error medio ±${n(m.mae_unidades)} arepas por producto` +
-        (m.mejora_vs_promedio !== undefined ? ` (${n(m.mejora_vs_promedio)}% mejor que un promedio simple)` : '') + '.');
+    if (p.alertas.length) lineas.push('', 'Insumos:', ...p.alertas.map(a => `• ${a}`));
+    else lineas.push('', 'El inventario actual alcanza para producir lo pronosticado.');
+    if (m.mae_unidades === null || m.mae_unidades === undefined) {
+        lineas.push('', `Modelo: ${p.modelo.arquitectura}, entrenado con ${plural(m.dias_con_ventas || 0, 'día', 'días')} de ventas. Con más días de historial podrá medir qué tan preciso es.`);
+    } else {
+        lineas.push('', `Modelo: ${p.modelo.arquitectura} · error medio ±${n(m.mae_unidades)} arepas por producto` +
+            (m.mejora_vs_promedio !== null && m.mejora_vs_promedio !== undefined ? ` (${n(m.mejora_vs_promedio)}% mejor que un promedio simple)` : '') + '.');
+    }
     return lineas.join('\n');
 }
 
 function responderPendientes(ctx) {
     const t = ctx.ventas.total;
-    if (!t.pendientes) return '✅ No hay ventas pendientes por cobrar.';
-    return `🕒 Hay ${plural(t.pendientes, 'venta pendiente', 'ventas pendientes')} por ${dinero(t.por_cobrar)}. ` +
+    if (!t.pendientes) return 'No hay ventas pendientes por cobrar.';
+    return `Hay ${plural(t.pendientes, 'venta pendiente', 'ventas pendientes')} por ${dinero(t.por_cobrar)}. ` +
         'Se ven en Ventas → filtro "Pendientes", y se marcan como completadas al cobrarlas.';
 }
 
 function responderDevoluciones(ctx) {
     const d = ctx.devoluciones_30_dias || [];
-    if (!d.length) return '✅ No hay devoluciones en los últimos 30 días.';
+    if (!d.length) return 'No hay devoluciones en los últimos 30 días.';
     const total = d.reduce((a, x) => a + x.cantidad, 0);
     const reembolsado = d.reduce((a, x) => a + x.reembolsado, 0);
-    return [`↩️ Devoluciones de los últimos 30 días: ${plural(total, 'registro', 'registros')}, reembolsado ${dinero(reembolsado)}.`,
+    return [`Devoluciones de los últimos 30 días: ${plural(total, 'registro', 'registros')}, reembolsado ${dinero(reembolsado)}.`,
         ...d.map(x => `• ${TEXTO_TIPO_DEV[x.tipo] || x.tipo} · ${x.accion}: ${x.cantidad}` + (x.reembolsado ? ` (${dinero(x.reembolsado)})` : ''))].join('\n');
 }
 
 const AYUDA = [
-    'Puedo responder con datos reales de la base de datos. Prueba con:',
+    'Puedes preguntarme, por ejemplo:',
     '• "¿Cuánto maíz hay?" o "¿Qué insumos están bajos?"',
     '• "¿Cuántos paquetes grandes puedo hacer?" · "¿Cuántas arepas preparo mañana?"',
     '• "¿Cuánto vendimos hoy?" / "ventas de la semana"',
@@ -429,8 +432,8 @@ function analizar(mensaje, ctx, historial = []) {
 function responder(mensaje, ctx, historial = []) {
     const { intencion, entidades } = analizar(mensaje, ctx, historial);
     switch (intencion) {
-        case 'saludo': return `¡Hola! 👋 Soy el asistente de La Exquisita y estoy conectado a la base de datos.\n\n${AYUDA}`;
-        case 'gracias': return '¡Con gusto! Si necesitas otra cifra, aquí estoy. 🌽';
+        case 'saludo': return `Hola. ¿Qué quieres revisar? Te puedo ayudar con esto:\n\n${AYUDA}`;
+        case 'gracias': return 'Con gusto. Si necesitas otra cifra, me dices.';
         case 'ayuda': return AYUDA;
         case 'pronostico': return responderPronostico(ctx, entidades);
         case 'pendientes': return responderPendientes(ctx);

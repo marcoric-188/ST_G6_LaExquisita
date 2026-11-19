@@ -39,15 +39,15 @@ function leerArgumentos() {
         if (existente) {
             await usuariosRepo.actualizarDatos(existente.id_usuario, datos);
             await usuariosRepo.actualizarPassword(existente.id_usuario, hash, true);
-            console.log(`✅ Usuario actualizado: ${datos.correo} (${datos.rol})`);
+            console.log(`Usuario actualizado: ${datos.correo} (${datos.rol})`);
         } else {
             await usuariosRepo.crear({ ...datos, hash, debeCambiar: true });
-            console.log(`✅ Usuario creado: ${datos.correo} (${datos.rol})`);
+            console.log(`Usuario creado: ${datos.correo} (${datos.rol})`);
         }
         await database.cerrar();
         process.exit(0);
     } catch (error) {
-        console.error('❌', error.message);
+        console.error('', error.message);
         process.exit(1);
     }
 })();

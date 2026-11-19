@@ -414,6 +414,33 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_ventas_estado' AND obj
 GO
 
 /* ==========================================================================
+   10b. NÚMERO CONSECUTIVO DE LA VENTA (0001, 0002, 0003...)
+        id_venta es IDENTITY y SQL Server puede saltar 1000 números al reiniciar
+        el servicio (caché de identidad). Por eso el número que ve el usuario
+        es una columna aparte que el backend asigna como MAX(numero) + 1.
+   ========================================================================== */
+IF COL_LENGTH('dbo.ventas', 'numero') IS NULL
+    ALTER TABLE dbo.ventas ADD numero INT NULL;
+GO
+-- Numera en orden las ventas que aún no tienen número
+;WITH sin_numero AS (
+    SELECT numero, ROW_NUMBER() OVER (ORDER BY id_venta) AS fila
+    FROM dbo.ventas WHERE numero IS NULL
+)
+UPDATE sin_numero
+SET numero = fila + (SELECT ISNULL(MAX(numero), 0) FROM dbo.ventas);
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_ventas_numero' AND object_id = OBJECT_ID('dbo.ventas'))
+    CREATE UNIQUE INDEX UX_ventas_numero ON dbo.ventas(numero) WHERE numero IS NOT NULL;
+GO
+-- Evita los saltos de 1000 en los IDENTITY (si el usuario no tiene permiso, se ignora)
+BEGIN TRY
+    ALTER DATABASE SCOPED CONFIGURATION SET IDENTITY_CACHE = OFF;
+END TRY
+BEGIN CATCH
+END CATCH
+GO
+
+/* ==========================================================================
    11. DEVOLUCIONES (por ejemplo, un producto que salió dañado)
        tipo   : producto_danado | producto_equivocado | cliente_insatisfecho | otro
        accion : reembolso  -> se devuelve el dinero (baja el total neto de la venta)

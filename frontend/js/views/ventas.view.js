@@ -6,7 +6,7 @@
  *                   con reposición del producto o reembolso del dinero.
  */
 import { $, $$, html, on } from '../utils/dom.js';
-import { dinero, numero, fechaHora, hoyISO, METODOS_PAGO, ESTADOS_VENTA, TIPOS_DEVOLUCION } from '../utils/format.js';
+import { dinero, numero, fechaHora, hoyISO, METODOS_PAGO, ESTADOS_VENTA, TIPOS_DEVOLUCION, numeroVenta as numeroVentaBase } from '../utils/format.js';
 import { ventasService } from '../services/ventas.service.js';
 import {
     toast, abrirModal, cerrarModal, animarNumero, filasEsqueleto, vacio,
@@ -23,7 +23,7 @@ const RANGOS = {
 let ventaActual = null;
 let accionDevolucion = 'reposicion';
 
-const numeroVenta = (id) => `#V-${String(id).padStart(4, '0')}`;
+const numeroVenta = (v) => `#${numeroVentaBase(v)}`;
 
 function etiquetaPago(metodo) {
     const m = METODOS_PAGO[metodo] || { etiqueta: metodo || '—', icono: 'fa-money-bill' };
@@ -52,7 +52,7 @@ async function cargar() {
 
         cuerpo.innerHTML = ventas.length ? html`${ventas.map((v, i) => html`
             <tr data-id="${v.id_venta}" style="animation-delay:${Math.min(i, 15) * 25}ms" title="Ver detalle">
-                <td><strong>${numeroVenta(v.id_venta)}</strong></td>
+                <td><strong>${numeroVenta(v)}</strong></td>
                 <td><small>${fechaHora(v.fecha_hora)}</small></td>
                 <td>${v.cliente || html`<small>Sin cliente</small>`}</td>
                 <td class="resumen-productos">${v.resumen || '—'}<br><small>${numero(v.unidades)} arepas${v.devoluciones ? ` · ${v.devoluciones} devolución(es)` : ''}</small></td>
@@ -79,7 +79,7 @@ function aplicarRango(rango) {
 function pintarDetalle(v) {
     const devolvible = ['completada', 'devuelta_parcial'].includes(v.estado) && v.items.some(i => i.cantidad > i.cantidad_devuelta);
     $('#venta-detalle-cuerpo').innerHTML = html`
-        <h3>Venta ${numeroVenta(v.id_venta)}</h3>
+        <h3>Venta ${numeroVenta(v)}</h3>
         <p class="texto-suave">${fechaHora(v.fecha_hora)}</p>
         <p style="margin-top:8px">${etiquetaEstado(v.estado)}</p>
         ${v.observacion ? html`<p class="texto-suave" style="margin-top:6px"><i class="fa-solid fa-note-sticky"></i> ${v.observacion}</p>` : ''}
@@ -121,11 +121,11 @@ async function verDetalle(id) {
 
 async function completarVenta(boton) {
     const metodo = $('#completar-metodo').value;
-    if (!(await confirmar(`¿Marcar la venta ${numeroVenta(ventaActual.id_venta)} como pagada por ${METODOS_PAGO[metodo].etiqueta}?`, { textoSi: 'Sí, completar' }))) return;
+    if (!(await confirmar(`¿Marcar la venta ${numeroVenta(ventaActual)} como pagada por ${METODOS_PAGO[metodo].etiqueta}?`, { textoSi: 'Sí, completar' }))) return;
     cargando(boton, true);
     try {
         await ventasService.completar(ventaActual.id_venta, metodo);
-        toast(`Venta ${numeroVenta(ventaActual.id_venta)} completada.`, 'exito');
+        toast(`Venta ${numeroVenta(ventaActual)} completada.`, 'exito');
         await verDetalle(ventaActual.id_venta);
         cargar();
     } catch (error) {
@@ -154,7 +154,7 @@ function abrirDevolucion() {
     limpiarErrores(form);
     accionDevolucion = 'reposicion';
     $$('#devolucion-accion .chip').forEach(c => c.classList.toggle('activo', c.dataset.accion === accionDevolucion));
-    $('#devolucion-venta').textContent = `Venta ${numeroVenta(ventaActual.id_venta)} · ${ventaActual.cliente || 'Sin cliente'}`;
+    $('#devolucion-venta').textContent = `Venta ${numeroVenta(ventaActual)} · ${ventaActual.cliente || 'Sin cliente'}`;
     $('#devolucion-items').innerHTML = html`${ventaActual.items.filter(i => i.cantidad > i.cantidad_devuelta).map(i => html`
         <div class="devolucion-item">
             <div class="info"><strong>${i.producto}</strong><small>Vendidos ${i.cantidad} · disponibles para devolver ${i.cantidad - i.cantidad_devuelta}</small></div>

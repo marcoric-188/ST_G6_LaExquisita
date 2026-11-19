@@ -43,9 +43,8 @@ test('pronóstico: los días sin ventas cuentan como 0 y la serie es continua', 
         { fecha: '2026-11-16', id_producto: 1, unidades: 10 }
     ];
     const { fechas, series } = construirSeries(filas, [1, 2], hasta);
-    assert.equal(fechas.length, 120);
-    assert.equal(fechas[fechas.length - 1], hasta);
-    assert.deepEqual(series.get(1).slice(-3), [10, 0, 30]);
+    assert.deepEqual(fechas, ['2026-11-16', '2026-11-17', '2026-11-18'], 'empieza el primer día con ventas');
+    assert.deepEqual(series.get(1), [10, 0, 30]);
     assert.ok(series.get(2).every(v => v === 0));
 });
 
@@ -59,10 +58,11 @@ test('pronóstico: variables de entrada (día de la semana, rezagos, promedios, 
     assert.deepEqual(x.slice(-2), [0, 1], 'producto en one-hot');
 });
 
-test('pronóstico: arma ejemplos solo cuando hay 28 días de historia', () => {
-    const fechas = Array.from({ length: 40 }, (_, i) => sumarDias('2026-01-01', i));
-    const series = new Map([[1, fechas.map((_, i) => i % 7)]]);
-    const ejemplos = armarEjemplos(series, fechas, [1], 10);
-    assert.equal(ejemplos.length, 40 - 28);
-    assert.equal(ejemplos[0].fecha, fechas[28]);
+test('pronóstico: con 2 días de ventas ya hay ejemplos para aprender', () => {
+    const fechas = ['2026-11-18', '2026-11-19'];
+    const series = new Map([[1, [40, 52]], [2, [30, 35]]]);
+    const ejemplos = armarEjemplos(series, fechas, [1, 2], 100);
+    assert.equal(ejemplos.length, 2, 'un ejemplo por producto');
+    assert.equal(ejemplos[0].real, 52);
+    assert.equal(ejemplos[0].x[7], 0.4, 'usa las ventas del día anterior');
 });

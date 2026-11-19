@@ -29,11 +29,11 @@ const iaRepo = require('../../repositories/ia.repository');
 const productosService = require('../productos.service');
 
 const DIAS_HISTORIA = 120;
-const VENTANA = 28;            // días que necesita mirar hacia atrás cada ejemplo
-const MIN_DIAS_CON_VENTAS = 21;
-const DIAS_VALIDACION = 14;
+const MIN_DIAS_CON_VENTAS = 2;  // con 2 días de ventas ya puede empezar a aprender
+const MAX_DIAS_VALIDACION = 14;
 const HORIZONTE = 7;
 const HORAS_REENTRENO = 24;
+const DIAS_CONFIANZA_TOTAL = 14; // desde aquí la red decide sola; antes se combina con el promedio reciente
 const OCULTAS = [8];
 const EPOCAS = 300;
 const NOMBRE_MODELO = 'Pronóstico de demanda diaria';
@@ -54,9 +54,14 @@ const NOMBRES_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'vier
 /* ------------------------------ Datos ------------------------------ */
 const promedio = (lista) => (lista.length ? lista.reduce((a, b) => a + b, 0) / lista.length : 0);
 
-/** Convierte las filas de SQL en una serie diaria continua (días sin ventas = 0) por producto. */
+/**
+ * Convierte las filas de SQL en una serie diaria continua (días sin ventas = 0) por producto.
+ * La serie empieza el primer día con ventas (máximo 120 días atrás).
+ */
 function construirSeries(filas, idsProductos, hasta) {
-    const desde = sumarDias(hasta, -(DIAS_HISTORIA - 1));
+    const limite = sumarDias(hasta, -(DIAS_HISTORIA - 1));
+    const conVentas = filas.filter(f => f.unidades > 0 && f.fecha >= limite && f.fecha <= hasta).map(f => f.fecha).sort();
+    const desde = conVentas.length ? conVentas[0] : hasta;
     const fechas = [];
     for (let f = desde; f <= hasta; f = sumarDias(f, 1)) fechas.push(f);
     const series = new Map(idsProductos.map(id => [id, new Map(fechas.map(f => [f, 0]))]));
@@ -90,7 +95,7 @@ function armarEjemplos(series, fechas, idsProductos, escala) {
     const ejemplos = [];
     idsProductos.forEach((id, k) => {
         const valores = series.get(id);
-        for (let t = VENTANA; t < valores.length; t++) {
+        for (let t = 1; t < valores.length; t++) {
             ejemplos.push({
                 fecha: fechas[t],
                 id_producto: id,
@@ -115,12 +120,12 @@ async function entrenar(usuario = null) {
     const { fechas, series } = construirSeries(filas, ids, ayer);
 
     const diasConVentas = fechas.filter((_, i) => ids.some(id => series.get(id)[i] > 0)).length;
-    if (!ids.length || diasConVentas < MIN_DIAS_CON_VENTAS) {
+    if (!ids.length || diasConVentas < MIN_DIAS_CON_VENTAS || fechas.length < 2) {
         return {
             estado: 'sin_datos',
             dias_con_ventas: diasConVentas,
             minimo: MIN_DIAS_CON_VENTAS,
-            mensaje: `La red neuronal necesita al menos ${MIN_DIAS_CON_VENTAS} días con ventas para aprender (hay ${diasConVentas}).`
+            mensaje: `La red neuronal necesita ventas de al menos ${MIN_DIAS_CON_VENTAS} días anteriores a hoy para aprender (hay ${diasConVentas}).`
         };
     }
 
@@ -128,31 +133,40 @@ async function entrenar(usuario = null) {
     const escala = Math.ceil(maximo * 1.2);
     const ejemplos = armarEjemplos(series, fechas, ids, escala);
 
-    // 1) Validación: entrena sin los últimos 14 días y mide el error en ellos
-    const corte = fechas[fechas.length - DIAS_VALIDACION];
-    const entrenamiento = ejemplos.filter(e => e.fecha < corte);
-    const validacion = ejemplos.filter(e => e.fecha >= corte);
-    const redPrueba = new RedNeuronal({ entradas: ejemplos[0].x.length, ocultas: OCULTAS });
-    redPrueba.entrenar(entrenamiento.map(e => e.x), entrenamiento.map(e => e.y), { epocas: EPOCAS, tasa: 0.01 });
-    const maeRed = mae(validacion.map(e => [Math.max(0, redPrueba.predecir(e.x) * escala), e.real]));
-    const maeBase = mae(validacion.map(e => [e.base, e.real]));
-    const mediaReal = promedio(validacion.map(e => e.real));
+    // 1) Validación: entrena sin los últimos días (hasta 14) y mide el error en ellos.
+    //    Con muy poco historial todavía no se puede medir, pero el modelo igual se entrena.
+    const diasValidacion = Math.min(MAX_DIAS_VALIDACION, Math.floor((fechas.length - 1) / 4));
+    let maeRed = null;
+    let maeBase = null;
+    let mediaReal = 0;
+    if (diasValidacion >= 1) {
+        const corte = fechas[fechas.length - diasValidacion];
+        const entrenamiento = ejemplos.filter(e => e.fecha < corte);
+        const validacion = ejemplos.filter(e => e.fecha >= corte);
+        if (entrenamiento.length && validacion.length) {
+            const redPrueba = new RedNeuronal({ entradas: ejemplos[0].x.length, ocultas: OCULTAS });
+            redPrueba.entrenar(entrenamiento.map(e => e.x), entrenamiento.map(e => e.y), { epocas: EPOCAS, tasa: 0.01 });
+            maeRed = mae(validacion.map(e => [Math.max(0, redPrueba.predecir(e.x) * escala), e.real]));
+            maeBase = mae(validacion.map(e => [e.base, e.real]));
+            mediaReal = promedio(validacion.map(e => e.real));
+        }
+    }
 
     // 2) Modelo final: entrena con todos los datos
     const red = new RedNeuronal({ entradas: ejemplos[0].x.length, ocultas: OCULTAS });
     const resultado = red.entrenar(ejemplos.map(e => e.x), ejemplos.map(e => e.y), { epocas: EPOCAS, tasa: 0.01 });
 
     const metricas = {
-        mae_unidades: Number(maeRed.toFixed(2)),
-        mae_promedio_simple: Number(maeBase.toFixed(2)),
-        mejora_vs_promedio: maeBase > 0 ? Number((((maeBase - maeRed) / maeBase) * 100).toFixed(1)) : 0,
-        precision_aprox: mediaReal > 0 ? Number(Math.max(0, (1 - maeRed / mediaReal) * 100).toFixed(1)) : null,
+        mae_unidades: maeRed === null ? null : Number(maeRed.toFixed(2)),
+        mae_promedio_simple: maeBase === null ? null : Number(maeBase.toFixed(2)),
+        mejora_vs_promedio: maeRed === null ? null : maeBase > 0 ? Number((((maeBase - maeRed) / maeBase) * 100).toFixed(1)) : 0,
+        precision_aprox: maeRed !== null && mediaReal > 0 ? Number(Math.max(0, (1 - maeRed / mediaReal) * 100).toFixed(1)) : null,
         error_inicial: Number(resultado.errorInicial.toFixed(5)),
         error_final: Number(resultado.errorFinal.toFixed(5)),
         curva_error: resultado.historial,
         epocas: resultado.epocas,
         ejemplos_entrenamiento: ejemplos.length,
-        dias_validacion: DIAS_VALIDACION,
+        dias_validacion: diasValidacion,
         dias_con_ventas: diasConVentas
     };
 
@@ -192,6 +206,11 @@ async function pronosticar() {
     const filas = await ventasRepo.demandaDiaria(DIAS_HISTORIA + 1);
     const { series } = construirSeries(filas, ids, ayer);
 
+    // Mientras aprende (pocos días de historial), el resultado combina la red con el promedio
+    // reciente; el peso de la red sube hasta 100 % al llegar a 14 días con ventas.
+    const diasHistorial = (modelo.metricas && modelo.metricas.dias_con_ventas) || 0;
+    const pesoRed = Math.min(1, diasHistorial / DIAS_CONFIANZA_TOTAL);
+
     // Pronóstico recursivo: lo que predice para hoy se usa para predecir mañana, y así.
     const porDia = [];
     const valoresPorProducto = new Map(ids.map(id => [id, [...series.get(id)]]));
@@ -201,7 +220,9 @@ async function pronosticar() {
         ids.forEach((id, k) => {
             const valores = valoresPorProducto.get(id);
             const x = variables(valores, valores.length, fecha, k, ids.length, escala);
-            const unidades = Math.max(0, Math.round(red.predecir(x) * escala));
+            const reciente = promedio(valores.slice(-7));
+            const deLaRed = Math.max(0, red.predecir(x) * escala);
+            const unidades = Math.max(0, Math.round(pesoRed * deLaRed + (1 - pesoRed) * reciente));
             valores.push(unidades);
             const p = productos[k];
             dia.productos.push({
@@ -246,6 +267,8 @@ async function pronosticar() {
             muestras: modelo.muestras,
             metricas: modelo.metricas
         },
+        peso_red: Math.round(pesoRed * 100),
+        dias_historial: diasHistorial,
         hoy: porDia[0],
         manana,
         proximos_dias: porDia.slice(1),

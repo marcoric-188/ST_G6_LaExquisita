@@ -4,9 +4,9 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 
 * **Proyecto:** Ingeniería de Software · UMB · Grupo 6
 * **Stack:** HTML + CSS + JavaScript (módulos) · Node.js + Express · SQL Server
-* **Documentación:** [`docs/`](docs/README.md) · [Arquitectura](docs/ARQUITECTURA.md) · [Servicio de IA](docs/IA.md) · [Persistencia](docs/PERSISTENCIA.md) · [Pruebas](docs/PRUEBAS.md) · [Guía de la demo](docs/GUIA_DEMO.md)
+* **Documentación:** [`docs/`](docs/README.md) · [Arquitectura](docs/ARQUITECTURA.md) · [Servicio de IA](docs/IA.md) · [Persistencia](docs/PERSISTENCIA.md) · [Pruebas](docs/PRUEBAS.md) · [Evidencias](docs/EVIDENCIAS.md) · [Guía de la demo](docs/GUIA_DEMO.md)
 
-![Inicio con el pronóstico de la red neuronal](docs/evidencias/capturas/01-inicio-pronostico.jpg)
+![Inicio con el pronóstico de la red neuronal](docs/evidencias/capturas/15-ia-red-neuronal.jpg)
 
 ---
 
@@ -16,7 +16,7 @@ Sistema transaccional por capas para **La Exquisita**, negocio de arepas de choc
 |--------|-------------|
 | **Inicio** | Indicadores en vivo (netos), **producción sugerida para mañana por la red neuronal**, gráfico de 7 días, paquetes que alcanzan con el inventario, alertas de stock y últimas ventas. |
 | **Venta Rápida POS** | 1) Buscar y seleccionar el cliente, o registrar uno nuevo sin salir de la venta. 2) **Paquete Arepa Grande** y **Paquete Arepa Pequeña**, cada uno por paquete x10 o por unidad, con cantidad. 3) Estado **Pagada ahora** o **Pendiente** (pedido por cobrar), método de pago (efectivo o transferencia), confirmación y recibo imprimible. |
-| **Clientes** | Directorio con búsqueda, rangos automáticos (Nuevo → Regular → Frecuente → VIP), detalle con historial de compras, edición y “vender a este cliente”. |
+| **Clientes** | Directorio con búsqueda, frecuencia de compra (frecuente si compró 4 o más días en el último mes, ocasional o nuevo), detalle con historial de compras, edición y “vender a este cliente”. |
 | **Insumos y Stock** | Existencias con barras de nivel, consumo de los últimos 7 días, días de cobertura, entradas de stock, creación/edición y kardex de movimientos. |
 | **Control de Mermas** | Registro de pérdidas por insumo y motivo; **descuenta el stock** en la misma transacción. |
 | **Ventas** | Historial con filtros por fecha y **estado**, totales netos y pendiente por cobrar. En el detalle: **completar** una venta pendiente o **registrar una devolución** (producto dañado, equivocado, cliente insatisfecho) con **reposición** del producto o **reembolso**. |
@@ -146,7 +146,7 @@ OPENAI_MODEL=gpt-5.5
 ```
 Si OpenAI falla, responde automáticamente el motor local. La IA es de **solo lectura**.
 
-La red neuronal necesita al menos 21 días con ventas. Para la demostración se puede cargar un historial de práctica (queda marcado como `demo` y se borra con `--borrar`):
+La red neuronal empieza a aprender con ventas de 2 días; mientras tenga menos de 14 días combina su resultado con el promedio reciente. Para ver un historial más largo se puede cargar un historial de práctica (queda marcado como `demo` y se borra con `--borrar`):
 ```bash
 npm run historial-demo
 ```
@@ -157,9 +157,9 @@ cd backend
 npm test           # 19 pruebas unitarias
 npm run test:api   # 15 pruebas de integración (con el backend corriendo; ver docs/PRUEBAS.md)
 ```
-Resultados y casos de prueba en [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
+Resultados y casos de prueba en [`docs/PRUEBAS.md`](docs/PRUEBAS.md). Evidencias con capturas de las pruebas y de la IA en [`docs/EVIDENCIAS.md`](docs/EVIDENCIAS.md).
 
 ## Ajustes frecuentes
 * **Precios:** `UPDATE dbo.productos SET precio = 24000, precio_unidad = 2500 WHERE tamano = 'grande';`
 * **Recetas (gasto por arepa):** tabla `dbo.recetas`.
-* **Logo:** reemplaza `frontend/assets/img/logo.png` (cuadrado, ideal 256×256)..
+* **Logo:** reemplaza `frontend/assets/img/logo.png` (cuadrado, ideal 256×256).

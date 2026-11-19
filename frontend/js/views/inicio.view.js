@@ -2,7 +2,7 @@
  * VISTA · Inicio (panel con indicadores en vivo desde SQL Server)
  */
 import { $, $$, html } from '../utils/dom.js';
-import { dinero, numero, haceCuanto, METODOS_PAGO } from '../utils/format.js';
+import { dinero, numero, haceCuanto, METODOS_PAGO, numeroVenta } from '../utils/format.js';
 import { estado } from '../core/store.js';
 import { dashboardService } from '../services/dashboard.service.js';
 import { iaService } from '../services/ia.service.js';
@@ -20,7 +20,7 @@ function saludo() {
     // Si se quitan estos elementos del HTML, el panel sigue funcionando
     const elSaludo = $('#hero-saludo');
     const elFecha = $('#hero-fecha');
-    if (elSaludo) elSaludo.textContent = `${texto}, ${nombre} 👋`;
+    if (elSaludo) elSaludo.textContent = `${texto}, ${nombre}`;
     if (elFecha) elFecha.textContent = fecha[0].toUpperCase() + fecha.slice(1);
 }
 
@@ -64,7 +64,7 @@ function pintarUltimas(ventas) {
     $('#panel-ultimas').innerHTML = ventas.length ? html`${ventas.slice(0, 5).map(v => html`
         <div class="item-compacto">
             <span class="icono-redondo"><i class="fa-solid ${(METODOS_PAGO[v.metodo_pago] || METODOS_PAGO.efectivo).icono}"></i></span>
-            <span class="info"><strong>${v.cliente || 'Sin cliente'}</strong><small>#${v.id_venta} · ${haceCuanto(v.fecha_hora)}</small></span>
+            <span class="info"><strong>${v.cliente || 'Sin cliente'}</strong><small>#${numeroVenta(v)} · ${haceCuanto(v.fecha_hora)}</small></span>
             <span class="valor">${dinero(v.estado === 'pendiente' ? v.total : v.total_neto)}</span>
         </div>`)}` : vacio('fa-receipt', 'Aún no hay ventas registradas.');
 }
@@ -75,10 +75,9 @@ const imagenProducto = (tamano) => (tamano === 'pequena' ? 'assets/img/arepa-peq
 function pintarPronostico(p) {
     const cuerpo = $('#pronostico-cuerpo');
     if (!p || p.estado !== 'ok') {
-        cuerpo.innerHTML = html`<div class="pron-vacio"><i class="fa-solid fa-brain"></i>
-            <div><strong>La red neuronal todavía está aprendiendo.</strong><br>
-            ${p && p.mensaje ? p.mensaje : 'No se pudo calcular el pronóstico.'}
-            Necesita varias semanas de ventas registradas para pronosticar la demanda.</div></div>`;
+        cuerpo.innerHTML = html`<div class="pron-vacio">
+            <div><strong>Todavía no hay suficientes ventas para pronosticar.</strong><br>
+            ${p && p.mensaje ? p.mensaje : 'No se pudo calcular el pronóstico.'}</div></div>`;
         return;
     }
     const m = p.modelo.metricas || {};
@@ -93,20 +92,23 @@ function pintarPronostico(p) {
                 </div>`)}
             ${p.alertas.length
                 ? html`<p class="aviso">${p.alertas.join(' ')}</p>`
-                : html`<p class="texto-suave" style="font-size:13px"><i class="fa-solid fa-circle-check" style="color:var(--hoja-600)"></i> El inventario alcanza para producir lo pronosticado.</p>`}
+                : html`<p class="texto-suave" style="font-size:13px">El inventario alcanza para producir lo pronosticado.</p>`}
         </div>
-        <div class="pron-semana" role="img" aria-label="Arepas pronosticadas para los próximos 7 días">
+        ${p.dias_historial >= 7 ? html`<div class="pron-semana" role="img" aria-label="Arepas pronosticadas para los próximos 7 días">
             ${p.proximos_dias.map((d, i) => html`<div class="barra-col" title="${d.dia_semana}: ${d.total_arepas} arepas">
                 <div class="barra ${i === 0 ? 'manana' : ''}" style="height:${Math.max(6, (d.total_arepas / max) * 100)}%; animation-delay:${i * 70}ms">
                     <span class="barra-valor">${d.total_arepas}</span>
                 </div>
                 <span class="barra-dia">${i === 0 ? 'mañana' : d.dia_semana.slice(0, 3)}</span>
             </div>`)}
-        </div>
+        </div>` : html`<div class="pron-aprendiendo"><div><strong>La red neuronal está aprendiendo.</strong><br>
+            Lleva ${numero(p.dias_historial)} día(s) de ventas. Mientras tanto combina su resultado con el promedio reciente
+            (peso de la red: ${p.peso_red}%). Con 7 días de ventas se muestra el pronóstico de la semana.</div></div>`}
         <div class="pron-meta">
             <div class="dato"><small>Modelo</small><strong>${p.modelo.arquitectura}</strong></div>
-            <div class="dato"><small>Error medio (validación)</small><strong>±${numero(m.mae_unidades)} arepas</strong></div>
-            <div class="dato"><small>Frente a un promedio simple</small><strong>${m.mejora_vs_promedio >= 0 ? `${numero(m.mejora_vs_promedio)}% mejor` : `${numero(-m.mejora_vs_promedio)}% peor`}</strong></div>
+            <div class="dato"><small>Error medio (validación)</small><strong>${m.mae_unidades === null || m.mae_unidades === undefined ? 'Faltan días para medirlo' : `±${numero(m.mae_unidades)} arepas`}</strong></div>
+            <div class="dato"><small>Frente a un promedio simple</small><strong>${m.mejora_vs_promedio === null || m.mejora_vs_promedio === undefined ? '—' : m.mejora_vs_promedio >= 0 ? `${numero(m.mejora_vs_promedio)}% mejor` : `${numero(-m.mejora_vs_promedio)}% peor`}</strong></div>
+            <div class="dato"><small>Días de historial</small><strong>${numero(m.dias_con_ventas || 0)} días con ventas</strong></div>
             <div class="dato"><small>Entrenado con</small><strong>${numero(p.modelo.muestras)} ejemplos · ${haceCuanto(p.modelo.fecha_entrenamiento)}</strong></div>
         </div>`;
 }
@@ -119,7 +121,7 @@ export const inicioVista = {
             cargando(reentrenar, true);
             try {
                 const r = await iaService.entrenar();
-                if (r.estado === 'ok') toast(`Red neuronal reentrenada: error medio ±${numero(r.metricas.mae_unidades)} arepas.`, 'exito');
+                if (r.estado === 'ok') toast('Red neuronal reentrenada.', 'exito');
                 else toast(r.mensaje, 'info');
                 pintarPronostico(await iaService.pronostico());
             } catch (error) {

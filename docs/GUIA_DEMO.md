@@ -10,7 +10,7 @@ npm install
 npm start
 ```
 
-En otra terminal, si la base tiene menos de 3 semanas de ventas, cargar el historial de práctica para la red neuronal:
+La red neuronal ya funciona con 2 días de ventas. Si se quiere mostrar la semana completa con un historial más largo, en otra terminal:
 
 ```bash
 npm run historial-demo
@@ -30,7 +30,7 @@ Abrir `http://localhost:3000`. Tener abiertos en VS Code `ventas.service.js`, `p
 6. **Devolución por producto dañado:** en esa venta, *Registrar devolución* → tipo *Producto dañado* → *Reponer producto*. Explicar que vuelve a descontar insumos.
 7. **Reembolso:** otra devolución con *Devolver dinero*. La venta pasa a *Devuelta parcial* y baja el total neto.
 8. **Insumos → Kardex:** mostrar los movimientos de venta y de reposición.
-9. **Clientes:** el acumulado y el rango cambiaron con las ventas.
+9. **Clientes:** el acumulado y la frecuencia (frecuente, ocasional, nuevo) se calculan con sus ventas.
 
 ## 2. Pruebas (criterio 3: calidad técnica)
 
@@ -56,7 +56,7 @@ Seguir las 5 preguntas de [`IA.md`](IA.md):
 | ¿Cómo lo usa el sistema? | Tarjeta "Producción sugerida", respuesta del asistente y alertas de compra |
 
 En vivo:
-- En Inicio, presionar **Reentrenar** y leer las métricas: error ±4,6 arepas, 68 % mejor que el promedio simple.
+- En Inicio, presionar **Reentrenar** y leer las métricas que muestra la tarjeta: error medio en arepas y cuánto mejora frente a un promedio simple.
 - En el Asistente: "¿Cuántas arepas preparo mañana?", "¿Qué debo comprar?" y "Devoluciones del mes".
 - En código: `redNeuronal.js`. Explicar la propagación hacia adelante, el error MSE, la retropropagación con la regla de la cadena y Adam.
 
@@ -64,12 +64,13 @@ En vivo:
 
 - Estructura por capas: [`ARQUITECTURA.md`](ARQUITECTURA.md).
 - Persistencia, pertinencia y congruencia: [`PERSISTENCIA.md`](PERSISTENCIA.md).
-- Evidencias de pruebas: [`evidencias/`](evidencias).
+- Evidencias de las pruebas y de la IA, con capturas: [`EVIDENCIAS.md`](EVIDENCIAS.md).
 
 ## Preguntas que pueden hacer
 
 - **¿Por qué la venta pendiente descuenta stock?** Porque las arepas ya se prepararon y apartaron. Lo que no hace es contar como dinero vendido hasta que se cobra.
 - **¿Qué pasa con un producto dañado?** Se registra la devolución con su tipo. Si se repone, se descuentan insumos otra vez. Si se reembolsa, baja el total neto y el acumulado del cliente.
-- **¿Por qué una red neuronal y no un promedio?** Porque aprende el patrón por día de la semana. En la validación tuvo 68 % menos error que el promedio de 7 días.
+- **¿Por qué una red neuronal y no un promedio?** Porque aprende el patrón por día de la semana. La tarjeta del Inicio muestra cuánto menos se equivoca que el promedio de 7 días.
+- **¿Qué pasa con pocos días de ventas?** Desde 2 días ya aprende; hasta los 14 días combina su resultado con el promedio reciente para no dar cifras sin sentido.
 - **¿Dónde queda el modelo?** En la tabla `modelos_ia` (pesos en JSON). Se reentrena cada 24 horas.
 - **¿Qué pasa si se cae SQL Server?** El servidor no se cae: muestra un aviso, reintenta y se reconecta solo.

@@ -16,11 +16,11 @@ const app = crearApp();
 
 const servidor = app.listen(env.port, () => {
     console.log('');
-    console.log('🌽  La Exquisita · POS & ERP');
-    console.log(`🚀  Abre en el navegador: http://localhost:${env.port}`);
-    console.log(`🔐  Autenticación BD: ${env.db.auth === 'windows' ? 'Windows (msnodesqlv8)' : 'SQL Server (usuario/contraseña)'}`);
+    console.log('La Exquisita · POS & ERP');
+    console.log(`Abre en el navegador: http://localhost:${env.port}`);
+    console.log(`Autenticación BD: ${env.db.auth === 'windows' ? 'Windows (msnodesqlv8)' : 'SQL Server (usuario/contraseña)'}`);
     if (env.auth.jwtSecretGenerado) {
-        console.log('⚠️   JWT_SECRET no está en .env: se generó uno temporal (las sesiones se cierran al reiniciar).');
+        console.log('JWT_SECRET no está en .env: se generó uno temporal (las sesiones se cierran al reiniciar).');
     }
     console.log('');
 });
@@ -28,7 +28,7 @@ const servidor = app.listen(env.port, () => {
 database.iniciar();
 
 process.on('unhandledRejection', (error) => {
-    console.error('⚠️  Promesa rechazada sin manejar:', error);
+    console.error('Promesa rechazada sin manejar:', error);
 });
 
 function apagar() {

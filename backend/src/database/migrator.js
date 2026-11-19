@@ -62,7 +62,7 @@ async function migrar({ abrirPool }) {
         }
 
         const resultado = { ok: true, lotes, ms: Date.now() - inicio, fecha: new Date().toISOString() };
-        console.log(`🛠️  Migración de base de datos aplicada (${lotes} lotes en ${resultado.ms} ms)`);
+        console.log(`Migración de base de datos aplicada (${lotes} lotes en ${resultado.ms} ms)`);
         return resultado;
     } finally {
         if (base) await base.close().catch(() => {});

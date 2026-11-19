@@ -8,7 +8,7 @@ Se aplican tres niveles de prueba sobre los procesos principales del sistema tra
 | **Integración** | Procesos completos contra la API real y SQL Server | `node:test` + `fetch` | `npm run test:api` | **15 de 15** aprobadas |
 | **Extremo a extremo** | Recorrido del usuario en un navegador real | Playwright (opcional) | `node pruebas/e2e.recorrido.js` | 7 de 7 pasos, sin errores en consola |
 
-Los resultados completos están en [`evidencias/pruebas/`](evidencias/pruebas) y las capturas en [`evidencias/capturas/`](evidencias/capturas).
+Los resultados completos están en [`evidencias/pruebas/`](evidencias/pruebas) y las capturas explicadas en [`EVIDENCIAS.md`](EVIDENCIAS.md).
 
 ## Cómo ejecutarlas
 
