@@ -162,4 +162,4 @@ Resultados y casos de prueba en [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
 ## Ajustes frecuentes
 * **Precios:** `UPDATE dbo.productos SET precio = 24000, precio_unidad = 2500 WHERE tamano = 'grande';`
 * **Recetas (gasto por arepa):** tabla `dbo.recetas`.
-* **Logo:** reemplaza `frontend/assets/img/logo.png` (cuadrado, ideal 256×256).
+* **Logo:** reemplaza `frontend/assets/img/logo.png` (cuadrado, ideal 256×256)..
